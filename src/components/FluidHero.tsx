@@ -448,7 +448,7 @@ export default function FluidHero() {
       renderer.render(quadScene, quadCamera);
     };
 
-    const maxAniso = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+    const maxAniso = renderer.capabilities.getMaxAnisotropy();
     const textureLoader = new THREE.TextureLoader();
 
     const texDarkBase = textureLoader.load("/base_dark_16_9.png");
@@ -458,7 +458,7 @@ export default function FluidHero() {
     texDarkBase.anisotropy = maxAniso;
     texDarkBaseRef.current = texDarkBase;
 
-    const texCreamBase = textureLoader.load("/base_cream_16_9.jpg");
+    const texCreamBase = textureLoader.load("/base_cream_16_9.png");
     texCreamBase.generateMipmaps = true;
     texCreamBase.minFilter = THREE.LinearMipmapLinearFilter;
     texCreamBase.magFilter = THREE.LinearFilter;
