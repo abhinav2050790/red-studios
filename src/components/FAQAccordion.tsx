@@ -13,24 +13,24 @@ export default function FAQAccordion() {
   };
 
   return (
-    <section id="faq" className="relative z-10 scroll-mt-24 bg-[#FFFFFF] py-36 sm:py-48 lg:py-60 text-black">
-      <div className="mx-auto max-w-4xl px-6 lg:px-8">
+    <section id="faq" className="relative z-10 scroll-mt-24 bg-[#FFFFFF] py-24 sm:py-48 lg:py-60 text-black">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="mx-auto max-w-2xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-black/15 bg-black/[0.04] px-4 py-1.5 font-mono text-xs uppercase tracking-widest text-black">
             <HelpCircle className="h-3.5 w-3.5" />
             Transparent Answers
           </div>
-          <h2 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
+          <h2 className="font-serif text-3xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
             Frequently Asked Questions.
           </h2>
-          <p className="mt-6 text-base leading-relaxed text-black/60 sm:text-lg">
+          <p className="mt-4 sm:mt-6 text-sm sm:text-lg leading-relaxed text-black/60">
             Everything you need to know about working with Red Studios, from turnaround schedules and deliverables to tech stack specifications.
           </p>
         </div>
 
         {/* Accordion List */}
-        <div className="mt-24 lg:mt-32 space-y-6 sm:space-y-8">
+        <div className="mt-16 sm:mt-24 lg:mt-32 space-y-4 sm:space-y-8">
           {FAQS.map((faq, idx) => {
             const isOpen = openIndex === idx;
             return (
@@ -42,13 +42,13 @@ export default function FAQAccordion() {
                   type="button"
                   onClick={() => toggleItem(idx)}
                   aria-expanded={isOpen}
-                  className="flex w-full items-center justify-between p-7 sm:p-9 text-left transition-colors cursor-pointer"
+                  className="flex w-full items-center justify-between p-5 sm:p-9 text-left transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center gap-6">
-                    <span className="font-mono text-sm font-bold text-black/40">
+                  <div className="flex items-center gap-3 sm:gap-6">
+                    <span className="font-mono text-xs sm:text-sm font-bold text-black/40">
                       {(idx + 1).toString().padStart(2, "0")}
                     </span>
-                    <span className="font-serif text-lg sm:text-2xl font-bold text-black">
+                    <span className="font-serif text-base sm:text-2xl font-bold text-black leading-snug">
                       {faq.question}
                     </span>
                   </div>

@@ -8,13 +8,13 @@ export default function TrustStrip() {
   const marqueeLogos = [...TRUST_LOGOS, ...TRUST_LOGOS, ...TRUST_LOGOS];
 
   return (
-    <section className="relative z-10 border-y border-black/[0.08] bg-[#FFFFFF] py-28 sm:py-36 lg:py-44 text-black">
+    <section className="relative z-10 border-y border-black/[0.08] bg-[#FFFFFF] py-20 sm:py-36 lg:py-44 text-black">
       {/* Subtle soft blush glow */}
       <div className="pointer-events-none absolute inset-x-0 -top-24 h-24 bg-gradient-to-b from-[#FFE4E9]/60 to-transparent blur-2xl" />
 
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Marquee Header / Intro */}
-        <div className="mb-12 lg:mb-16 flex flex-col items-center justify-between gap-6 border-b border-black/[0.08] pb-8 sm:flex-row">
+        <div className="mb-10 sm:mb-12 lg:mb-16 flex flex-col items-center justify-between gap-4 sm:gap-6 border-b border-black/[0.08] pb-6 sm:pb-8 sm:flex-row text-center sm:text-left">
           <div className="flex items-center gap-3">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-black opacity-75" />
@@ -30,12 +30,12 @@ export default function TrustStrip() {
         </div>
 
         {/* Infinite Logo Marquee */}
-        <div className="relative mb-24 lg:mb-32 overflow-hidden py-6">
-          <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-24 bg-gradient-to-r from-[#FFFFFF] to-transparent" />
-          <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-24 bg-gradient-to-l from-[#FFFFFF] to-transparent" />
+        <div className="relative mb-16 sm:mb-24 lg:mb-32 overflow-hidden py-4 sm:py-6">
+          <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-16 sm:w-24 bg-gradient-to-r from-[#FFFFFF] to-transparent" />
+          <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-16 sm:w-24 bg-gradient-to-l from-[#FFFFFF] to-transparent" />
 
           <motion.div
-            className="flex w-max items-center gap-16"
+            className="flex w-max items-center gap-8 sm:gap-16 will-change-transform"
             animate={{ x: [0, -1000] }}
             transition={{
               duration: 28,

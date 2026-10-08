@@ -109,24 +109,24 @@ export default function ProjectBriefForm() {
   };
 
   return (
-    <section id="brief" className="relative z-10 scroll-mt-24 bg-[#FAF9F7] py-36 sm:py-48 lg:py-64 text-black">
-      <div className="mx-auto max-w-5xl px-6 lg:px-8">
+    <section id="brief" className="relative z-10 scroll-mt-24 bg-[#FAF9F7] py-24 sm:py-48 lg:py-64 text-black">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="mx-auto max-w-2xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-black/15 bg-black/[0.04] px-4 py-1.5 font-mono text-xs uppercase tracking-widest text-black">
             <span className="h-1.5 w-1.5 rounded-full bg-black" />
             Structured Intake
           </div>
-          <h2 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
+          <h2 className="font-serif text-3xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
             Start Your Project Brief.
           </h2>
-          <p className="mt-6 text-base leading-relaxed text-black/60 sm:text-lg">
+          <p className="mt-4 sm:mt-6 text-sm sm:text-lg leading-relaxed text-black/60">
             Tell us about your brand and what you aim to achieve. Receive a comprehensive, fixed-scope estimate within 24 hours.
           </p>
         </div>
 
         {/* Wizard Container */}
-        <div className="relative mt-20 lg:mt-24 overflow-hidden rounded-3xl border border-black/10 bg-white p-10 sm:p-16 lg:p-20 shadow-xl">
+        <div className="relative mt-14 sm:mt-20 lg:mt-24 overflow-hidden rounded-3xl border border-black/10 bg-white p-5 sm:p-16 lg:p-20 shadow-xl">
           {/* Success State */}
           {serverStatus?.success ? (
             <motion.div

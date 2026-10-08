@@ -8,24 +8,24 @@ import { PHILOSOPHY_PRINCIPLES, FOUNDER_QUOTE } from "@/content/studio";
 export default function PhilosophyEthics() {
   return (
     <section id="ethics" className="relative z-10 scroll-mt-24 bg-[#FFFFFF] py-36 sm:py-48 lg:py-60 text-black">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-black/15 bg-black/[0.04] px-4 py-1.5 font-mono text-xs uppercase tracking-widest text-black">
             <span className="h-1.5 w-1.5 rounded-full bg-black" />
             Operating Principles
           </div>
-          <h2 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
+          <h2 className="font-serif text-3xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
             How We Work Is Who We Are.
           </h2>
-          <p className="mt-6 text-base leading-relaxed text-black/60 sm:text-lg lg:text-xl">
+          <p className="mt-4 sm:mt-6 text-sm sm:text-lg lg:text-xl leading-relaxed text-black/60">
             We don’t believe in fluff, inflated retainer hours, or compromised creative standards.
             Six rules guide every shoot, every cut, and every commit.
           </p>
         </div>
 
         {/* 6 Principles Grid */}
-        <div className="mt-24 lg:mt-32 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10">
+        <div className="mt-16 sm:mt-24 lg:mt-32 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10">
           {PHILOSOPHY_PRINCIPLES.map((principle, idx) => (
             <motion.div
               key={principle.number}
@@ -33,7 +33,7 @@ export default function PhilosophyEthics() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.1, duration: 0.5 }}
-              className="group relative flex flex-col justify-between rounded-3xl border border-black/[0.08] bg-[#FAF9F7] p-10 sm:p-12 shadow-sm transition-all duration-300 hover:border-black/30 hover:shadow-xl hover:bg-white"
+              className="group relative flex flex-col justify-between rounded-3xl border border-black/[0.08] bg-[#FAF9F7] p-6 sm:p-12 shadow-sm transition-all duration-300 hover:border-black/30 hover:shadow-xl hover:bg-white"
             >
               {/* Corner soft blush accent */}
               <div className="pointer-events-none absolute -right-12 -top-12 h-24 w-24 rounded-full bg-[#FFD1DC]/40 blur-2xl transition-all duration-500 group-hover:bg-[#FFD1DC]/70" />

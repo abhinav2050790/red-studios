@@ -29,6 +29,7 @@
   padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
@@ -36,6 +37,7 @@ html {
   color: var(--text-primary);
   scroll-behavior: smooth;
   font-family: var(--font-body, system-ui, -apple-system, sans-serif);
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -44,6 +46,18 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
+  touch-action: pan-y;
+}
+
+button, a, input, textarea, select {
+  touch-action: manipulation;
+}
+
+/* Prevent iOS Safari auto-zoom on input focus while keeping desktop design */
+@media screen and (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
 }
 
 /* Custom Scrollbar */

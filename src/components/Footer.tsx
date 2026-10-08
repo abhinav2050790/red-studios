@@ -10,11 +10,11 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative z-10 border-t border-black/[0.08] bg-[#FFFFFF] py-28 text-black sm:py-36 lg:py-44">
+    <footer className="relative z-10 border-t border-black/[0.08] bg-[#FFFFFF] py-20 text-black sm:py-36 lg:py-44">
       {/* Subtle top blush hairline */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-pink-200 to-transparent" />
 
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-5 lg:gap-20">
           {/* Brand Info (2 cols) */}
           <div className="lg:col-span-2">

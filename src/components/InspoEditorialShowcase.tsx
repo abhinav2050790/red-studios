@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import {
@@ -33,6 +33,34 @@ export default function InspoEditorialShowcase() {
 
   const goToSlide = (index: number) => {
     setCurrentSlide(index);
+  };
+
+  // Mobile Touch Swipe Handling
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      touchStartXRef.current = e.touches[0].clientX;
+      touchStartYRef.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    if (e.changedTouches.length === 1) {
+      const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+      const deltaY = e.changedTouches[0].clientY - touchStartYRef.current;
+      if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
+        if (deltaX < 0) {
+          nextSlide();
+        } else {
+          prevSlide();
+        }
+      }
+    }
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
   };
 
   // Keyboard navigation
@@ -152,7 +180,11 @@ export default function InspoEditorialShowcase() {
       </header>
 
       {/* Main Slides Canvas Container */}
-      <div className="relative w-full min-h-[85vh] sm:min-h-[88vh] flex items-center justify-center px-4 sm:px-12 py-10">
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="relative w-full min-h-[85vh] sm:min-h-[88vh] flex items-center justify-center px-4 sm:px-12 py-10 touch-pan-y"
+      >
         <AnimatePresence mode="wait">
           {/* ============================================================ */}
           {/* SLIDE 1 (*01): THE LITTLE VANITY / RED STUDIOS               */}
@@ -193,14 +225,14 @@ export default function InspoEditorialShowcase() {
                   </p>
 
                   {/* Huge Didone Vanity Title */}
-                  <h1 className="font-serif text-5xl sm:text-7xl lg:text-9xl font-bold tracking-tight text-black leading-none mb-6">
+                  <h1 className="font-serif text-4xl sm:text-7xl lg:text-9xl font-bold tracking-tight text-black leading-none mb-6">
                     VANITY
                   </h1>
 
                   {/* Soft Pastel Pink / Peach Gradient Blob */}
-                  <div className="relative mt-4 flex items-center gap-6">
+                  <div className="relative mt-4 flex items-center gap-4 sm:gap-6">
                     <div className="relative flex items-center justify-center">
-                      <div className="w-40 sm:w-52 h-40 sm:h-52 rounded-full bg-gradient-to-tr from-[#FFD1DC] via-[#FFE4E9] to-[#FFE6D9] blur-md opacity-90" />
+                      <div className="w-32 h-32 sm:w-52 sm:h-52 rounded-full bg-gradient-to-tr from-[#FFD1DC] via-[#FFE4E9] to-[#FFE6D9] blur-md opacity-90" />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <span className="font-sans text-xs sm:text-sm font-semibold tracking-widest uppercase text-black">
                           FIND YOURS

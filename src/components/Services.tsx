@@ -18,24 +18,24 @@ export default function Services() {
       {/* Background ambient blush gradient */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(255,209,220,0.3),rgba(255,255,255,0))]" />
 
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-black/15 bg-black/[0.04] px-4 py-1.5 font-mono text-xs uppercase tracking-widest text-black">
             <span className="h-1.5 w-1.5 rounded-full bg-black" />
             Core Disciplines
           </div>
-          <h2 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
+          <h2 className="font-serif text-3xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
             Prêt-à-porter Visuals & Code.
           </h2>
-          <p className="mt-6 text-base leading-relaxed text-black/60 sm:text-lg lg:text-xl">
+          <p className="mt-4 sm:mt-6 text-sm sm:text-lg lg:text-xl leading-relaxed text-black/60">
             We bridge the gap between high-fashion film cinematography and modern full-stack web engineering.
             Four dedicated practices under one singular creative standard.
           </p>
         </div>
 
         {/* 4 Service Cards Grid */}
-        <div className="mt-24 lg:mt-32 grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-14">
+        <div className="mt-16 sm:mt-24 lg:mt-32 grid grid-cols-1 gap-8 sm:gap-12 lg:grid-cols-2 lg:gap-14">
           {SERVICES.map((service, index) => {
             const IconComponent = iconMap[service.iconName] || Camera;
             return (
@@ -45,7 +45,7 @@ export default function Services() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.15, duration: 0.6 }}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-black/[0.08] bg-gradient-to-b from-[#FFF5F7] via-[#FFFFFF] to-[#FAF9F7] p-10 sm:p-14 lg:p-16 shadow-sm transition-all duration-300 hover:border-black/30 hover:shadow-xl"
+                className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-black/[0.08] bg-gradient-to-b from-[#FFF5F7] via-[#FFFFFF] to-[#FAF9F7] p-6 sm:p-14 lg:p-16 shadow-sm transition-all duration-300 hover:border-black/30 hover:shadow-xl"
               >
                 {/* Soft pink highlight glow */}
                 <div className="pointer-events-none absolute -right-24 -top-24 h-48 w-48 rounded-full bg-[#FFD1DC]/40 blur-3xl transition-all duration-500 group-hover:bg-[#FFD1DC]/70" />

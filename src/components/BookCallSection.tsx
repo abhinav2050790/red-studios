@@ -17,12 +17,12 @@ export default function BookCallSection() {
   };
 
   return (
-    <section id="call" className="relative z-10 scroll-mt-24 bg-[#FFFFFF] py-36 sm:py-48 lg:py-64 text-black">
+    <section id="call" className="relative z-10 scroll-mt-24 bg-[#FFFFFF] py-24 sm:py-48 lg:py-64 text-black">
       {/* Subtle background blush aura */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_50%,rgba(255,209,220,0.35),rgba(255,255,255,0))]" />
 
-      <div className="mx-auto max-w-5xl px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl border border-pink-200/60 bg-gradient-to-br from-[#FFE4E9] via-[#FFF0F3] to-[#FFE6D9] p-12 sm:p-20 lg:p-24 shadow-xl">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-3xl border border-pink-200/60 bg-gradient-to-br from-[#FFE4E9] via-[#FFF0F3] to-[#FFE6D9] p-6 sm:p-16 lg:p-24 shadow-xl">
           <div className="relative text-center">
             {/* Pill Header */}
             <div className="inline-flex items-center gap-2 rounded-full border border-black/15 bg-white/80 px-4 py-1.5 font-mono text-xs uppercase tracking-widest text-black shadow-xs">

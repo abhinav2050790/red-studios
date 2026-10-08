@@ -10,17 +10,17 @@ export default function ProcessFlow() {
 
   return (
     <section id="process" className="relative z-10 scroll-mt-24 bg-[#FFFFFF] py-36 sm:py-48 lg:py-60 text-black">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-black/15 bg-black/[0.04] px-4 py-1.5 font-mono text-xs uppercase tracking-widest text-black">
             <span className="h-1.5 w-1.5 rounded-full bg-black" />
             Client Journey
           </div>
-          <h2 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
+          <h2 className="font-serif text-3xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
             5 Structured Phases. Zero Guesswork.
           </h2>
-          <p className="mt-6 text-base leading-relaxed text-black/60 sm:text-lg lg:text-xl">
+          <p className="mt-4 sm:mt-6 text-sm sm:text-lg lg:text-xl leading-relaxed text-black/60">
             From initial creative concept to global live deployment. Guaranteed milestones, live staging previews, and transparent pricing.
           </p>
         </div>
@@ -110,11 +110,11 @@ export default function ProcessFlow() {
         </div>
 
         {/* Mobile / Tablet Vertical Flow */}
-        <div className="mt-12 space-y-6 lg:hidden">
+        <div className="mt-12 space-y-4 sm:space-y-6 lg:hidden">
           {PROCESS_STEPS.map((step) => (
             <div
               key={step.step}
-              className="rounded-3xl border border-black/[0.08] bg-[#FAF9F7] p-8 shadow-xs"
+              className="rounded-3xl border border-black/[0.08] bg-[#FAF9F7] p-5 sm:p-8 shadow-xs"
             >
               <div className="flex items-center justify-between">
                 <span className="font-mono text-xs font-bold text-black">

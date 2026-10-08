@@ -34,7 +34,7 @@ export default function Navigation() {
     <>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled
+          isScrolled || isMobileMenuOpen
             ? "translate-y-0 opacity-100 bg-[#0A0A0A]/85 backdrop-blur-md border-b border-white/[0.08] py-3.5"
             : "-translate-y-full opacity-0 pointer-events-none py-3.5"
         }`}
@@ -87,7 +87,7 @@ export default function Navigation() {
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label={isMobileMenuOpen ? "Close menu" : "Open navigation menu"}
-            className="md:hidden p-2 text-white/80 hover:text-white focus:outline-none"
+            className="md:hidden p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-white/90 hover:text-white focus:outline-none cursor-pointer"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>

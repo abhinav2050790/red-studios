@@ -59,7 +59,7 @@ export default function WorkLightbox({ project, onClose }: WorkLightboxProps) {
             <button
               onClick={onClose}
               aria-label="Close project modal"
-              className="absolute right-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-black shadow-md transition-colors hover:bg-black hover:text-white cursor-pointer"
+              className="absolute right-3.5 top-3.5 sm:right-5 sm:top-5 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/95 text-black shadow-md transition-colors hover:bg-black hover:text-white cursor-pointer active:scale-95"
             >
               <X className="h-4 w-4" />
             </button>
@@ -78,9 +78,9 @@ export default function WorkLightbox({ project, onClose }: WorkLightboxProps) {
 
               {/* Metric Badge */}
               {project.metrics && (
-                <div className="absolute bottom-5 left-6 flex items-center gap-2 rounded-full border border-white/20 bg-black/80 px-4 py-1.5 backdrop-blur-md">
-                  <Sparkles className="h-3.5 w-3.5 text-white" />
-                  <span className="font-mono text-xs font-semibold text-white">
+                <div className="absolute bottom-3 left-4 sm:bottom-5 sm:left-6 flex items-center gap-2 rounded-full border border-white/20 bg-black/80 px-3.5 py-1 sm:px-4 sm:py-1.5 backdrop-blur-md">
+                  <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
+                  <span className="font-mono text-[11px] sm:text-xs font-semibold text-white">
                     {project.metrics}
                   </span>
                 </div>
@@ -88,7 +88,7 @@ export default function WorkLightbox({ project, onClose }: WorkLightboxProps) {
             </div>
 
             {/* Content Details */}
-            <div className="p-8 sm:p-12">
+            <div className="p-6 sm:p-12">
               {/* Meta row */}
               <div className="flex flex-wrap items-center gap-4 text-xs text-black/50">
                 <span className="inline-flex items-center gap-1.5 font-mono uppercase tracking-wider text-black font-semibold">

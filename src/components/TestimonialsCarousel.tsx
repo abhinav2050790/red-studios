@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Star, Quote } from "lucide-react";
 import { TESTIMONIALS } from "@/content/studio";
@@ -20,31 +20,63 @@ export default function TestimonialsCarousel() {
     );
   };
 
+  // Mobile Touch Swipe Handling
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      touchStartXRef.current = e.touches[0].clientX;
+      touchStartYRef.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    if (e.changedTouches.length === 1) {
+      const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+      const deltaY = e.changedTouches[0].clientY - touchStartYRef.current;
+      if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
+        if (deltaX < 0) {
+          next();
+        } else {
+          prev();
+        }
+      }
+    }
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+  };
+
   const active = TESTIMONIALS[currentIndex];
 
   return (
-    <section className="relative z-10 bg-[#FFFFFF] py-36 sm:py-48 lg:py-60 text-black">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <section className="relative z-10 bg-[#FFFFFF] py-24 sm:py-48 lg:py-60 text-black">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-black/15 bg-black/[0.04] px-4 py-1.5 font-mono text-xs uppercase tracking-widest text-black">
             <span className="h-1.5 w-1.5 rounded-full bg-black" />
             Client Endorsements
           </div>
-          <h2 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
+          <h2 className="font-serif text-3xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
             Trusted By Visionary Founders.
           </h2>
-          <p className="mt-6 text-base leading-relaxed text-black/60 sm:text-lg lg:text-xl">
+          <p className="mt-4 sm:mt-6 text-sm sm:text-lg lg:text-xl leading-relaxed text-black/60">
             Hear directly from the teams who entrusted Red Studios with their brand cinematography, commercials, and digital flagships.
           </p>
         </div>
 
         {/* Carousel Container */}
-        <div className="relative mx-auto mt-24 lg:mt-32 max-w-5xl">
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className="relative mx-auto mt-16 sm:mt-24 lg:mt-32 max-w-5xl touch-pan-y"
+        >
           {/* Subtle soft blush backdrop */}
           <div className="pointer-events-none absolute -inset-6 rounded-3xl bg-gradient-to-r from-[#FFD1DC]/40 via-[#FFE4E9]/30 to-[#FFE6D9]/40 blur-2xl" />
 
-          <div className="relative overflow-hidden rounded-3xl border border-black/10 bg-[#FAF9F7] p-10 sm:p-16 lg:p-20 shadow-xl backdrop-blur-md">
+          <div className="relative overflow-hidden rounded-3xl border border-black/10 bg-[#FAF9F7] p-6 sm:p-16 lg:p-20 shadow-xl backdrop-blur-md">
             {/* Top Bar: 5-star rating + Quote Icon */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">

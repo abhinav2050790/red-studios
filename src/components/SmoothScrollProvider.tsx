@@ -11,6 +11,13 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion) return;
 
+    // On mobile touch devices, allow 100% native hardware momentum scrolling (60-120Hz ProMotion)
+    const isTouchDevice = window.matchMedia("(pointer: coarse)").matches || "ontouchstart" in window;
+    if (isTouchDevice) {
+      // Native touch scrolling provides the smoothest zero-latency experience on mobile
+      return;
+    }
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -18,7 +25,7 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
       gestureOrientation: "vertical",
       smoothWheel: true,
       wheelMultiplier: 1.0,
-      touchMultiplier: 1.5,
+      touchMultiplier: 0,
     });
 
     lenisRef.current = lenis;
