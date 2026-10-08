@@ -205,23 +205,12 @@ const maskCompositeFragShader = `
     float boxFade = smoothstep(0.002, 0.040, boxDist);
 
     vec4 baseColor = uBaseBgColor;
-    float isLogo = 0.0;
-    vec4 sharpVideo = uRevealBgColor;
+    vec4 sharpRevealColor = uRevealBgColor;
 
     if (boxDist > 0.001) {
       vec2 clampedUv = clamp(scaledUv, 0.001, 0.999);
       vec4 sampleBase = texture2D(uBaseTexture, clampedUv);
       baseColor = mix(uBaseBgColor, sampleBase, boxFade);
-
-      // Distinguish the logo/text glyph from the background
-      // In dark theme: text is white/light (lum > 0.4), background is black (lum ~ 0)
-      // In cream theme: text is black/dark (lum < 0.45), background is cream (lum ~ 0.95)
-      float lum = dot(sampleBase.rgb, vec3(0.299, 0.587, 0.114));
-      if (uIsDark > 0.5) {
-        isLogo = smoothstep(0.12, 0.48, lum) * boxFade;
-      } else {
-        isLogo = smoothstep(0.82, 0.38, lum) * boxFade;
-      }
 
       vec4 vid = texture2D(uRevealTexture, clampedUv);
       vec2 texel = vec2(1.0 / 1280.0, 1.0 / 720.0);
@@ -232,7 +221,9 @@ const maskCompositeFragShader = `
       vec4 laplacian = 4.0 * vid - (cTop + cBottom + cLeft + cRight);
 
       float sharpenStrength = 0.35 * smoothstep(0.02, 0.08, boxDist);
-      sharpVideo = clamp(vid + sharpenStrength * laplacian, 0.0, 1.0);
+      vec4 sharpVideo = clamp(vid + sharpenStrength * laplacian, 0.0, 1.0);
+
+      sharpRevealColor = mix(uRevealBgColor, sharpVideo, boxFade);
     }
 
     // Pure liquid mask with crisp surface tension (identical to noth.in reference)
@@ -240,14 +231,7 @@ const maskCompositeFragShader = `
     float mask = smoothstep(uEdgeSoftness, uEdgeSoftness + uEdgeWidth, raw);
     mask = clamp(mask, 0.0, 1.0);
 
-    // Liquid content:
-    // On background (isLogo == 0): Rich solid ink ribbon
-    // In dark theme: pure white/cream ink ribbon; in cream theme: rich jet black ink ribbon
-    // Inside the logo/typography (isLogo == 1): Reveals the dynamic 3D metallic video
-    vec4 inkColor = (uIsDark > 0.5) ? vec4(0.96, 0.96, 0.96, 1.0) : vec4(0.04, 0.04, 0.04, 1.0);
-    vec4 liquidContent = mix(inkColor, sharpVideo, isLogo);
-
-    gl_FragColor = mix(baseColor, liquidContent, mask);
+    gl_FragColor = mix(baseColor, sharpRevealColor, mask);
   }
 `;
 
@@ -330,19 +314,19 @@ export default function FluidHero() {
       (window.innerWidth <= 1024 && window.matchMedia("(pointer: coarse)").matches)
     );
 
-    // Exact fluid parameters strictly restored as before from noth.in reference
+    // Exact fluid parameters dynamically tuned for mobile 60-120fps efficiency while preserving max PC fidelity
     const settings = {
       simResolution: isMobileScreen ? 128 : 256,
       dyeResolution: isMobileScreen ? 256 : 512,
-      velocityDissipation: 0.962, // Exact noth.in
-      dyeDissipation: isMobileScreen ? 0.968 : 0.988, // Exact noth.in
-      pressureIterations: isMobileScreen ? 8 : 20, // Exact noth.in
+      velocityDissipation: 0.962,
+      dyeDissipation: isMobileScreen ? 0.988 : 0.992,
+      pressureIterations: isMobileScreen ? 8 : 20,
       curlStrength: 0.0,
-      splatRadius: isMobileScreen ? 0.00012 : 0.00006, // Exact noth.in 6e-5!
-      splatForce: 5900, // Exact noth.in 5900!
-      revealSize: 3.9,  // Exact noth.in 3.9!
-      edgeSoftness: 0.5, // Exact noth.in 0.5!
-      edgeWidth: 0.01,  // Exact noth.in 0.01!
+      splatRadius: isMobileScreen ? 0.00018 : 0.00010,
+      splatForce: 5900,
+      revealSize: 4.6,
+      edgeSoftness: 0.5,
+      edgeWidth: 0.01,
     };
 
     let renderer: THREE.WebGLRenderer;
@@ -557,7 +541,7 @@ export default function FluidHero() {
         const dist = Math.hypot(u, f);
 
         if (dist > 0.0001 && scrollS > 0.001) {
-          activeSimFrames = isMobileScreen ? 180 : 220;
+          activeSimFrames = isMobileScreen ? 280 : 360;
 
           // Velocity splat: imparts physical hydrodynamic momentum along drag vector
           splatMat.uniforms.uTarget.value = velocity.read.texture;
