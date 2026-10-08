@@ -19,6 +19,7 @@ const advectionShader = `
   uniform vec2 uTexelSize;
   uniform float uDt;
   uniform float uDissipation;
+  uniform float uDecayFloor;
   varying vec2 vUv;
 
   vec4 bilerp(sampler2D sam, vec2 uv, vec2 tsize) {
@@ -34,7 +35,7 @@ const advectionShader = `
 
   void main() {
     vec2 coord = vUv - uDt * texture2D(uVelocity, vUv).xy * uTexelSize;
-    vec4 result = uDissipation * bilerp(uSource, coord, uTexelSize);
+    vec4 result = max(vec4(0.0), uDissipation * bilerp(uSource, coord, uTexelSize) - vec4(uDecayFloor));
     gl_FragColor = result;
   }
 `;
@@ -329,7 +330,7 @@ export default function FluidHero() {
       simResolution: isMobileScreen ? 128 : 256,
       dyeResolution: isMobileScreen ? 256 : 512,
       velocityDissipation: 0.962, // Gliding liquid momentum
-      dyeDissipation: isMobileScreen ? 0.966 : 0.988, // Natural settling on mobile (~2s) without freezing
+      dyeDissipation: isMobileScreen ? 0.964 : 0.978, // Natural settling (~2s) without freezing or sticking
       pressureIterations: isMobileScreen ? 6 : 20, // 6 Jacobi iterations on 128x128 grid cuts 70% mobile draw calls
       curlStrength: 0.0,          // Zero turbulent smoke curl (pure sleek water stream)
       splatRadius: isMobileScreen ? 0.00035 : 0.00006, // Wider natural touch swath for finger drags
@@ -430,6 +431,7 @@ export default function FluidHero() {
       uTexelSize: { value: simTexelSize },
       uDt: { value: 1.0 },
       uDissipation: { value: settings.velocityDissipation },
+      uDecayFloor: { value: 0.0 },
     });
 
     const divergenceMat = makePassMat(divergenceShader, {
@@ -518,10 +520,19 @@ export default function FluidHero() {
 
     let planeAspect = window.innerWidth / window.innerHeight;
     let animId = 0;
-    let activeSimFrames = 120;
+    const COOLDOWN_DURATION = isMobileScreen ? 2200 : 2600; // ms to ensure 100% complete organic fluid dissolve
+    let lastInteractTime = performance.now();
+    let lastFrameTime = performance.now();
+    let isSimActive = true;
     let lastVideoUpdate = 0;
     let isHeroInView = true;
     let isLoopRunning = false;
+
+    const clearFBO = (target: THREE.WebGLRenderTarget) => {
+      renderer.setRenderTarget(target);
+      renderer.setClearColor(0x000000, 0.0);
+      renderer.clear(true, true, true);
+    };
 
     const mouseSegments: { x0: number; y0: number; x1: number; y1: number }[] = [];
     let prevMouse: { x: number; y: number } | null = null;
@@ -533,9 +544,20 @@ export default function FluidHero() {
         return;
       }
 
+      const now = performance.now();
+      const deltaSec = Math.min(0.05, Math.max(0.001, (now - lastFrameTime) / 1000));
+      lastFrameTime = now;
+      const timeScale = deltaSec / 0.016667;
+
+      // Frame-rate independent dissipation
+      const curVelDissipation = Math.pow(settings.velocityDissipation, timeScale);
+      const curDyeDissipation = Math.pow(settings.dyeDissipation, timeScale);
+      const curDecayFloor = 0.0009 * timeScale;
+
       // 1. Splat velocity & dye along smooth unbroken segment steps
       if (mouseSegments.length > 0) {
-        activeSimFrames = isMobileScreen ? 140 : 180;
+        lastInteractTime = now;
+        isSimActive = true;
         const maxSegs = isMobileScreen ? 4 : 16;
         const segs = mouseSegments.splice(-maxSegs);
         mouseSegments.length = 0;
@@ -574,9 +596,9 @@ export default function FluidHero() {
         }
       }
 
-      if (activeSimFrames > 0) {
-        activeSimFrames--;
+      const timeSinceInteract = now - lastInteractTime;
 
+      if (isSimActive && timeSinceInteract < COOLDOWN_DURATION) {
         // 2. Vorticity / Curl (skip when curlStrength is 0.0 to save 2 FBO render passes)
         if (settings.curlStrength > 0.0) {
           curlMat.uniforms.uVelocity.value = velocity.read.texture;
@@ -595,16 +617,18 @@ export default function FluidHero() {
         advectionMat.uniforms.uSource.value = velocity.read.texture;
         advectionMat.uniforms.uTexelSize.value = simTexelSize;
         advectionMat.uniforms.uDt.value = 1.0;
-        advectionMat.uniforms.uDissipation.value = settings.velocityDissipation;
+        advectionMat.uniforms.uDissipation.value = curVelDissipation;
+        advectionMat.uniforms.uDecayFloor.value = 0.0;
         renderPass(advectionMat, velocity.write);
         velocity.swap();
 
-        // 4. Advection (Dye) with uDt = 1.0 for forward liquid water throw
+        // 4. Advection (Dye) with dynamic decay floor to guarantee pristine non-sticking dissolve
         advectionMat.uniforms.uVelocity.value = velocity.read.texture;
         advectionMat.uniforms.uSource.value = dye.read.texture;
         advectionMat.uniforms.uTexelSize.value = dyeTexelSize;
         advectionMat.uniforms.uDt.value = 1.0;
-        advectionMat.uniforms.uDissipation.value = settings.dyeDissipation;
+        advectionMat.uniforms.uDissipation.value = curDyeDissipation;
+        advectionMat.uniforms.uDecayFloor.value = curDecayFloor;
         renderPass(advectionMat, dye.write);
         dye.swap();
 
@@ -631,7 +655,6 @@ export default function FluidHero() {
 
         // 8. Video texture frame update throttled for 30fps source on mobile
         if (videoCream.readyState >= videoCream.HAVE_CURRENT_DATA) {
-          const now = performance.now();
           if (!isMobileScreen || now - lastVideoUpdate >= 32) {
             texOffwhiteReveal.needsUpdate = true;
             lastVideoUpdate = now;
@@ -650,11 +673,19 @@ export default function FluidHero() {
           isLoopRunning = false;
         }
       } else {
-        // Simulation settled: render final resting frame then sleep RAF loop (0% GPU / battery idle)
+        // Simulation settled: Flush dye & velocity FBOs to absolute zero to prevent any frozen artifacts
+        clearFBO(dye.read);
+        clearFBO(dye.write);
+        clearFBO(velocity.read);
+        clearFBO(velocity.write);
+
+        // Render pristine final resting frame then sleep RAF loop (0% GPU / battery idle)
         maskMaterial.uniforms.uDye.value = dye.read.texture;
         renderer.setRenderTarget(null);
         renderer.clear();
         renderer.render(scene, camera);
+
+        isSimActive = false;
         isLoopRunning = false;
       }
     };
@@ -662,6 +693,7 @@ export default function FluidHero() {
     const startLoop = () => {
       if (!isLoopRunning && isHeroInView) {
         isLoopRunning = true;
+        lastFrameTime = performance.now();
         animId = requestAnimationFrame(animate);
       }
     };
@@ -683,7 +715,8 @@ export default function FluidHero() {
         (maskMaterial.uniforms.uRevealBgColor.value as THREE.Vector4).set(r, g, b, a);
       },
       requestRender: () => {
-        activeSimFrames = Math.max(activeSimFrames, 15);
+        lastInteractTime = performance.now();
+        isSimActive = true;
         startLoop();
       },
     };
@@ -728,7 +761,8 @@ export default function FluidHero() {
       }
       maskMaterial.uniforms.uContentScale.value = contentScale;
 
-      activeSimFrames = Math.max(activeSimFrames, 10);
+      lastInteractTime = performance.now();
+      isSimActive = true;
       startLoop();
     };
 
@@ -779,12 +813,34 @@ export default function FluidHero() {
       const normX = (e.clientX - rect.left) / rect.width;
       const normY = (e.clientY - rect.top) / rect.height;
       onMouseMoveNormalized(normX, normY);
+      lastInteractTime = performance.now();
+      isSimActive = true;
+      startLoop();
+    };
+
+    const handleMouseDown = (e: MouseEvent) => {
+      const rect = container.getBoundingClientRect();
+      if (e.clientY < rect.top || e.clientY > rect.bottom || e.clientX < rect.left || e.clientX > rect.right) return;
+      const normX = (e.clientX - rect.left) / rect.width;
+      const normY = (e.clientY - rect.top) / rect.height;
+      onMouseMoveNormalized(normX, normY);
+      mouseSegments.push({
+        x0: normX,
+        y0: 1.0 - normY,
+        x1: normX + 0.001,
+        y1: 1.0 - normY + 0.001,
+      });
+      lastInteractTime = performance.now();
+      isSimActive = true;
       startLoop();
     };
 
     const handleMouseLeave = () => {
       hasPrevMouse = false;
       prevMouse = null;
+      lastInteractTime = performance.now();
+      isSimActive = true;
+      startLoop();
     };
 
     const handleTouchStart = (e: TouchEvent) => {
@@ -805,6 +861,8 @@ export default function FluidHero() {
           x1: normX + 0.001,
           y1: 1.0 - normY + 0.001,
         });
+        lastInteractTime = performance.now();
+        isSimActive = true;
         startLoop();
       }
     };
@@ -822,6 +880,8 @@ export default function FluidHero() {
         const normX = (t.clientX - rect.left) / rect.width;
         const normY = (t.clientY - rect.top) / rect.height;
         onMouseMoveNormalized(normX, normY);
+        lastInteractTime = performance.now();
+        isSimActive = true;
         startLoop();
       }
     };
@@ -829,9 +889,13 @@ export default function FluidHero() {
     const handleTouchEnd = () => {
       hasPrevMouse = false;
       prevMouse = null;
+      lastInteractTime = performance.now();
+      isSimActive = true;
+      startLoop();
     };
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    window.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mouseleave", handleMouseLeave);
     window.addEventListener("touchstart", handleTouchStart, { passive: true });
     window.addEventListener("touchmove", handleTouchMove, { passive: true });
@@ -848,7 +912,8 @@ export default function FluidHero() {
       ([entry]) => {
         isHeroInView = entry.isIntersecting;
         if (isHeroInView) {
-          activeSimFrames = Math.max(activeSimFrames, 5);
+          lastInteractTime = performance.now();
+          isSimActive = true;
           startLoop();
         } else {
           stopLoop();
@@ -869,6 +934,7 @@ export default function FluidHero() {
       window.removeEventListener("resize", resize);
       window.removeEventListener("orientationchange", resize);
       window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mouseleave", handleMouseLeave);
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
