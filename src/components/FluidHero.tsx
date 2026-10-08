@@ -166,19 +166,20 @@ const maskCompositeFragShader = `
   uniform float uEdgeWidth;
   uniform float uPlaneAspect;
   uniform float uContentScale;
+  uniform float uCenterY;
   uniform vec4 uBaseBgColor;
   uniform vec4 uRevealBgColor;
   uniform float uIsMobile;
   varying vec2 vUv;
 
-  vec2 getMappedUv(vec2 uv, float imageAspect, float planeAspect, float contentScale) {
+  vec2 getMappedUv(vec2 uv, float imageAspect, float planeAspect, float contentScale, float centerY) {
     if (planeAspect < 1.0) {
       // Mobile / Portrait: Fit the 16:9 canvas horizontally within screen with responsive margins
       float wScale = contentScale;
       float hScale = contentScale * (planeAspect / imageAspect);
       return vec2(
         (uv.x - 0.5) / wScale + 0.5,
-        (uv.y - 0.5) / hScale + 0.5
+        (uv.y - centerY) / hScale + 0.5
       );
     } else {
       // Desktop / Landscape: Cover mapping matching original desktop scale
@@ -199,7 +200,7 @@ const maskCompositeFragShader = `
     float dye = texture2D(uDye, uv).r;
 
     // Responsive UV mapping: guarantees full 16:9 logo is visible and never cut off on mobile phones
-    vec2 scaledUv = getMappedUv(uv, 16.0 / 9.0, uPlaneAspect, uContentScale);
+    vec2 scaledUv = getMappedUv(uv, 16.0 / 9.0, uPlaneAspect, uContentScale, uCenterY);
 
     // Seamless feathered boundary calculation for centered 16:9 logo box
     vec2 edgeDist = min(scaledUv, 1.0 - scaledUv);
@@ -251,6 +252,7 @@ export default function FluidHero() {
   const containerRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoCreamRef = useRef<HTMLVideoElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
 
   const [theme, setTheme] = useState<"dark" | "cream">("dark");
   const [isTouch, setIsTouch] = useState(false);
@@ -495,6 +497,7 @@ export default function FluidHero() {
         uEdgeWidth: { value: settings.edgeWidth },
         uPlaneAspect: { value: 16 / 9 },
         uContentScale: { value: 0.58 },
+        uCenterY: { value: 0.5 },
         uIsMobile: { value: isMobileScreen ? 1.0 : 0.0 },
         uBaseBgColor: {
           value:
@@ -686,24 +689,59 @@ export default function FluidHero() {
     };
 
     const resize = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const width = Math.max(1, Math.round(rect.width));
+      const height = Math.max(1, Math.round(rect.height));
       planeAspect = width / height;
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
       renderer.setPixelRatio(dpr);
       renderer.setSize(width, height, false);
       maskMaterial.uniforms.uPlaneAspect.value = planeAspect;
+      splatMat.uniforms.uAspectRatio.value = planeAspect;
+
+      // Dynamically measure visual center of the open stage between header and bottom controls
+      let centerY = 0.5;
+      if (stageRef.current && height > 0) {
+        const stageRect = stageRef.current.getBoundingClientRect();
+        if (stageRect.height > 0) {
+          const stageCenterY = (stageRect.top + stageRect.height / 2) - rect.top;
+          // In WebGL UV: 0.0 is bottom, 1.0 is top
+          centerY = 1.0 - (stageCenterY / height);
+          centerY = Math.max(0.35, Math.min(0.65, centerY));
+        }
+      }
+      maskMaterial.uniforms.uCenterY.value = centerY;
 
       const isSmallPhone = width <= 480;
       const isMobile = width <= 768;
-      maskMaterial.uniforms.uContentScale.value = isSmallPhone ? 0.88 : isMobile ? 0.78 : 0.58;
+      let contentScale = isSmallPhone ? 0.86 : isMobile ? 0.78 : 0.58;
+
+      // In portrait, ensure the 16:9 logo height never exceeds 76% of available open stage height
+      if (width < height && stageRef.current) {
+        const stageHeight = stageRef.current.getBoundingClientRect().height;
+        if (stageHeight > 0) {
+          const maxScaleForStage = (stageHeight * 0.76 * (16 / 9)) / width;
+          contentScale = Math.min(contentScale, maxScaleForStage);
+        }
+      }
+      maskMaterial.uniforms.uContentScale.value = contentScale;
 
       activeSimFrames = Math.max(activeSimFrames, 10);
       startLoop();
     };
+
     resize();
+    const frameId = requestAnimationFrame(resize);
+    const timerId = setTimeout(resize, 80);
+
+    const resizeObserver = new ResizeObserver(() => {
+      resize();
+    });
+    resizeObserver.observe(container);
     window.addEventListener("resize", resize);
+    window.addEventListener("orientationchange", resize);
 
     const onMouseMoveNormalized = (normX: number, normY: number) => {
       const x = Math.max(0, Math.min(1, normX));
@@ -755,7 +793,7 @@ export default function FluidHero() {
       if (e.touches.length > 0) {
         const t = e.touches[0];
         const rect = container.getBoundingClientRect();
-        if (t.clientY < rect.top || t.clientY > rect.bottom) return;
+        if (t.clientY < rect.top || t.clientY > rect.bottom || t.clientX < rect.left || t.clientX > rect.right) return;
 
         const normX = (t.clientX - rect.left) / rect.width;
         const normY = (t.clientY - rect.top) / rect.height;
@@ -775,7 +813,7 @@ export default function FluidHero() {
       if (e.touches.length > 0) {
         const t = e.touches[0];
         const rect = container.getBoundingClientRect();
-        if (t.clientY < rect.top || t.clientY > rect.bottom) {
+        if (t.clientY < rect.top || t.clientY > rect.bottom || t.clientX < rect.left || t.clientX > rect.right) {
           hasPrevMouse = false;
           prevMouse = null;
           return;
@@ -824,8 +862,12 @@ export default function FluidHero() {
 
     return () => {
       observer.disconnect();
+      resizeObserver.disconnect();
+      cancelAnimationFrame(frameId);
+      clearTimeout(timerId);
       stopLoop();
       window.removeEventListener("resize", resize);
+      window.removeEventListener("orientationchange", resize);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseleave", handleMouseLeave);
       window.removeEventListener("touchstart", handleTouchStart);
@@ -841,7 +883,7 @@ export default function FluidHero() {
     <section
       ref={containerRef}
       id="intro"
-      className={`relative w-full h-[100dvh] min-h-[100dvh] overflow-hidden select-none transition-colors duration-500 ${
+      className={`relative w-full h-[100vh] h-[100dvh] min-h-[100vh] min-h-[100dvh] overflow-hidden select-none transition-colors duration-500 ${
         isCream ? "bg-[#f6f5f0] text-[#111111]" : "bg-[#000000] text-[#ffffff]"
       }`}
     >
@@ -876,12 +918,20 @@ export default function FluidHero() {
       />
 
       {/* Full-Screen WebGL Fluid Mask Canvas */}
-      <div className="absolute inset-0 z-[1] w-full h-full pointer-events-none">
+      <div className="absolute inset-0 z-[1] w-full h-full pointer-events-none overflow-hidden">
         <canvas ref={canvasRef} className="w-full h-full block" />
       </div>
 
-      {/* Page UI Container (Pristine layout matching index.html) */}
-      <div className="relative z-10 w-full h-full flex flex-col justify-between p-4 sm:p-10 lg:px-14 lg:py-9 pointer-events-none">
+      {/* Page UI Container (Pristine layout matching index.html with safe-area protection) */}
+      <div
+        className="relative z-10 w-full h-full flex flex-col justify-between p-4 sm:p-10 lg:px-14 lg:py-9 pointer-events-none"
+        style={{
+          paddingTop: "max(1rem, env(safe-area-inset-top, 1rem))",
+          paddingBottom: "max(1rem, env(safe-area-inset-bottom, 1rem))",
+          paddingLeft: "max(1rem, env(safe-area-inset-left, 1rem))",
+          paddingRight: "max(1rem, env(safe-area-inset-right, 1rem))",
+        }}
+      >
         {/* Top Header */}
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 sm:gap-4 pointer-events-auto w-full">
           <div
@@ -898,7 +948,7 @@ export default function FluidHero() {
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="interactive-target flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-semibold backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95"
+              className="interactive-target flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-semibold backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 whitespace-nowrap"
               style={{
                 background: isCream ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)",
                 border: isCream ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.12)",
@@ -906,23 +956,23 @@ export default function FluidHero() {
               }}
               title="Toggle between Dark Obsidian & Studio Cream"
             >
-              <span className="w-2 h-2 rounded-full bg-[#ff3333] shadow-[0_0_8px_#ff3333]" />
+              <span className="w-2 h-2 rounded-full bg-[#ff3333] shadow-[0_0_8px_#ff3333] shrink-0" />
               <span>Theme: {isCream ? "Studio Cream" : "Dark Obsidian"}</span>
             </button>
 
             {/* Availability Status Badge */}
             <div
-              className="hidden md:flex items-center gap-2 text-xs font-semibold uppercase tracking-wider"
+              className="hidden md:flex items-center gap-2 text-xs font-semibold uppercase tracking-wider whitespace-nowrap"
               style={{ color: isCream ? "#666666" : "#888888" }}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] shadow-[0_0_8px_#22c55e] animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] shadow-[0_0_8px_#22c55e] animate-pulse shrink-0" />
               Available Q4/2026
             </div>
 
             {/* Book a Call CTA */}
             <a
               href="#call"
-              className="interactive-target px-3 py-1.5 sm:px-5 sm:py-2 rounded-full text-[11px] sm:text-sm font-semibold backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
+              className="interactive-target px-3 py-1.5 sm:px-5 sm:py-2 rounded-full text-[11px] sm:text-sm font-semibold backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95 whitespace-nowrap"
               style={{
                 background: isCream ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)",
                 border: isCream ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.12)",
@@ -935,7 +985,7 @@ export default function FluidHero() {
         </header>
 
         {/* Center: Open Stage showcasing the Red Studios logo & fluid reveal */}
-        <div className="flex-1 pointer-events-none" />
+        <div ref={stageRef} className="flex-1 w-full min-h-0 flex items-center justify-center pointer-events-none" />
 
         {/* Bottom Instruction Tag & Scroll Down Pill */}
         <div className="flex flex-col items-center gap-2 sm:gap-3 my-2 sm:my-4 pointer-events-auto max-w-[92vw] mx-auto">
@@ -970,13 +1020,13 @@ export default function FluidHero() {
           style={{ color: isCream ? "#666666" : "#888888" }}
         >
           <div className="flex items-center gap-3 text-center sm:text-left">
-            <span className="tracking-wider uppercase font-semibold text-[9px] min-[380px]:text-[10px] sm:text-xs">
+            <span className="tracking-wider uppercase font-semibold text-[9px] min-[380px]:text-[10px] sm:text-xs whitespace-nowrap">
               LONDON / TOKYO / NEW YORK
             </span>
             <span className="hidden sm:inline opacity-60">© 2026 Red Studios. All rights reserved.</span>
           </div>
 
-          <nav className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-[10px] sm:text-xs">
+          <nav className="flex flex-wrap items-center justify-center gap-2.5 min-[380px]:gap-3 sm:gap-6 text-[10px] sm:text-xs">
             <a href="#instagram" className="interactive-target hover:text-[#ff3333] transition-colors py-0.5 sm:py-1">
               Instagram
             </a>
