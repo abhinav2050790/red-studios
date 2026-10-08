@@ -205,33 +205,12 @@ const maskCompositeFragShader = `
     float boxFade = smoothstep(0.002, 0.040, boxDist);
 
     vec4 baseColor = uBaseBgColor;
-    float isLogo = 0.0;
-    vec4 sharpVideo = uRevealBgColor;
+    vec4 sharpRevealColor = uRevealBgColor;
 
     if (boxDist > 0.001) {
       vec2 clampedUv = clamp(scaledUv, 0.001, 0.999);
       vec4 sampleBase = texture2D(uBaseTexture, clampedUv);
-
-      // High-precision adaptive edge unsharp mask to keep 2K Didone letterforms razor-sharp on mobile Retina/OLED
-      vec2 baseTexel = vec2(1.0 / 2048.0, 1.0 / 1152.0);
-      vec4 bTop    = texture2D(uBaseTexture, clamp(clampedUv + vec2(0.0, baseTexel.y), 0.001, 0.999));
-      vec4 bBottom = texture2D(uBaseTexture, clamp(clampedUv - vec2(0.0, baseTexel.y), 0.001, 0.999));
-      vec4 bLeft   = texture2D(uBaseTexture, clamp(clampedUv - vec2(baseTexel.x, 0.0), 0.001, 0.999));
-      vec4 bRight  = texture2D(uBaseTexture, clamp(clampedUv + vec2(baseTexel.x, 0.0), 0.001, 0.999));
-      vec4 bLaplacian = 4.0 * sampleBase - (bTop + bBottom + bLeft + bRight);
-      sampleBase = clamp(sampleBase + 0.35 * bLaplacian, 0.0, 1.0);
-
       baseColor = mix(uBaseBgColor, sampleBase, boxFade);
-
-      // Distinguish the logo/text glyph from the background
-      // In dark theme: text is white/light (lum > 0.4), background is black (lum ~ 0)
-      // In cream theme: text is black/dark (lum < 0.45), background is cream (lum ~ 0.95)
-      float lum = dot(sampleBase.rgb, vec3(0.299, 0.587, 0.114));
-      if (uIsDark > 0.5) {
-        isLogo = smoothstep(0.12, 0.48, lum) * boxFade;
-      } else {
-        isLogo = smoothstep(0.82, 0.38, lum) * boxFade;
-      }
 
       vec4 vid = texture2D(uRevealTexture, clampedUv);
       vec2 texel = vec2(1.0 / 1280.0, 1.0 / 720.0);
@@ -242,7 +221,9 @@ const maskCompositeFragShader = `
       vec4 laplacian = 4.0 * vid - (cTop + cBottom + cLeft + cRight);
 
       float sharpenStrength = 0.35 * smoothstep(0.02, 0.08, boxDist);
-      sharpVideo = clamp(vid + sharpenStrength * laplacian, 0.0, 1.0);
+      vec4 sharpVideo = clamp(vid + sharpenStrength * laplacian, 0.0, 1.0);
+
+      sharpRevealColor = mix(uRevealBgColor, sharpVideo, boxFade);
     }
 
     // Pure liquid mask with crisp surface tension (identical to noth.in reference)
@@ -250,14 +231,7 @@ const maskCompositeFragShader = `
     float mask = smoothstep(uEdgeSoftness, uEdgeSoftness + uEdgeWidth, raw);
     mask = clamp(mask, 0.0, 1.0);
 
-    // Liquid content:
-    // On background (isLogo == 0): Rich solid ink ribbon
-    // In dark theme: pure white/cream ink ribbon; in cream theme: rich jet black ink ribbon
-    // Inside the logo/typography (isLogo == 1): Reveals the dynamic 3D metallic video
-    vec4 inkColor = (uIsDark > 0.5) ? vec4(0.96, 0.96, 0.96, 1.0) : vec4(0.04, 0.04, 0.04, 1.0);
-    vec4 liquidContent = mix(inkColor, sharpVideo, isLogo);
-
-    gl_FragColor = mix(baseColor, liquidContent, mask);
+    gl_FragColor = mix(baseColor, sharpRevealColor, mask);
   }
 `;
 
