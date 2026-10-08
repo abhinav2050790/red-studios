@@ -205,9 +205,3 @@ html.lenis body {
   }
 }
 
-/* Hide default cursor on desktop with pointer: fine for custom physics cursor */
-@media (pointer: fine) {
-  html, body, a, button, input, textarea, select, .interactive-target {
-    cursor: none !important;
-  }
-}

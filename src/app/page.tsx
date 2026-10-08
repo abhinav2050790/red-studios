@@ -1,6 +1,5 @@
 import React from "react";
 import SmoothScrollProvider from "@/components/SmoothScrollProvider";
-import CustomCursor from "@/components/CustomCursor";
 import Navigation from "@/components/Navigation";
 import FluidHero from "@/components/FluidHero";
 import InspoEditorialShowcase from "@/components/InspoEditorialShowcase";
@@ -19,9 +18,6 @@ import Footer from "@/components/Footer";
 export default function Home() {
   return (
     <SmoothScrollProvider>
-      {/* Interactive Custom Cursor Follower */}
-      <CustomCursor />
-
       {/* Main Container */}
       <div className="relative min-h-screen bg-[#FFFFFF] text-[#0A0A0A] selection:bg-[#FFD1DC] selection:text-black">
         {/* Navigation Bar */}

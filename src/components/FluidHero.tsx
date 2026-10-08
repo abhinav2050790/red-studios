@@ -170,6 +170,7 @@ const maskCompositeFragShader = `
   uniform vec4 uBaseBgColor;
   uniform vec4 uRevealBgColor;
   uniform float uIsMobile;
+  uniform float uIsDark;
   varying vec2 vUv;
 
   vec2 getMappedUv(vec2 uv, float imageAspect, float planeAspect, float contentScale, float centerY) {
@@ -208,7 +209,8 @@ const maskCompositeFragShader = `
     float boxFade = smoothstep(0.002, 0.040, boxDist);
 
     vec4 baseColor = uBaseBgColor;
-    vec4 sharpRevealColor = uRevealBgColor;
+    float isLogo = 0.0;
+    vec4 sharpVideo = uRevealBgColor;
 
     if (boxDist > 0.001) {
       vec2 clampedUv = clamp(scaledUv, 0.001, 0.999);
@@ -225,26 +227,47 @@ const maskCompositeFragShader = `
 
       baseColor = mix(uBaseBgColor, sampleBase, boxFade);
 
-      vec4 sharpVideo = texture2D(uRevealTexture, clampedUv);
+      // Distinguish the logo/text glyph from the background
+      // In dark theme: text is white/light (lum > 0.4), background is black (lum ~ 0)
+      // In cream theme: text is black/dark (lum < 0.45), background is cream (lum ~ 0.95)
+      float lum = dot(sampleBase.rgb, vec3(0.299, 0.587, 0.114));
+      if (uIsDark > 0.5) {
+        isLogo = smoothstep(0.12, 0.48, lum) * boxFade;
+      } else {
+        isLogo = smoothstep(0.82, 0.38, lum) * boxFade;
+      }
+
+      vec4 vid = texture2D(uRevealTexture, clampedUv);
       vec2 texel = vec2(1.0 / 1280.0, 1.0 / 720.0);
       vec4 cTop    = texture2D(uRevealTexture, clamp(clampedUv + vec2(0.0, texel.y), 0.001, 0.999));
       vec4 cBottom = texture2D(uRevealTexture, clamp(clampedUv - vec2(0.0, texel.y), 0.001, 0.999));
       vec4 cLeft   = texture2D(uRevealTexture, clamp(clampedUv - vec2(texel.x, 0.0), 0.001, 0.999));
       vec4 cRight  = texture2D(uRevealTexture, clamp(clampedUv + vec2(texel.x, 0.0), 0.001, 0.999));
-      vec4 laplacian = 4.0 * sharpVideo - (cTop + cBottom + cLeft + cRight);
+      vec4 laplacian = 4.0 * vid - (cTop + cBottom + cLeft + cRight);
 
       float sharpenStrength = 0.35 * smoothstep(0.02, 0.08, boxDist);
-      sharpVideo = clamp(sharpVideo + sharpenStrength * laplacian, 0.0, 1.0);
-
-      sharpRevealColor = mix(uRevealBgColor, sharpVideo, boxFade);
+      sharpVideo = clamp(vid + sharpenStrength * laplacian, 0.0, 1.0);
     }
 
-    // Pure liquid mask with crisp surface tension (identical to noth.in)
+    // Pure liquid mask with crisp surface tension (identical to noth.in reference)
     float raw = dye * uRevealSize;
     float mask = smoothstep(uEdgeSoftness, uEdgeSoftness + uEdgeWidth, raw);
     mask = clamp(mask, 0.0, 1.0);
 
-    gl_FragColor = mix(baseColor, sharpRevealColor, mask);
+    // Liquid content:
+    // On background (isLogo == 0): Rich solid ink ribbon
+    // In dark theme: pure white/cream ink ribbon; in cream theme: rich jet black ink ribbon
+    // Inside the logo/typography (isLogo == 1): Reveals the dynamic 3D metallic video
+    vec4 inkColor = (uIsDark > 0.5) ? vec4(0.96, 0.96, 0.96, 1.0) : vec4(0.05, 0.05, 0.05, 1.0);
+    vec4 liquidContent = mix(inkColor, sharpVideo, isLogo);
+
+    // Specular meniscus highlight along the fluid boundary (surface tension sheen)
+    float edgeHighlight = smoothstep(uEdgeSoftness, uEdgeSoftness + 0.015, raw) * 
+                          (1.0 - smoothstep(uEdgeSoftness + 0.015, uEdgeSoftness + 0.045, raw));
+    float highlightAmt = (uIsDark > 0.5) ? 0.25 : 0.15;
+    liquidContent.rgb += vec3(edgeHighlight * highlightAmt);
+
+    gl_FragColor = mix(baseColor, liquidContent, mask);
   }
 `;
 
@@ -269,6 +292,7 @@ export default function FluidHero() {
     setTextures: (base: THREE.Texture, reveal: THREE.Texture) => void;
     setBaseBgColor: (r: number, g: number, b: number, a: number) => void;
     setRevealBgColor: (r: number, g: number, b: number, a: number) => void;
+    setIsDark: (val: number) => void;
     requestRender?: () => void;
   } | null>(null);
 
@@ -287,12 +311,14 @@ export default function FluidHero() {
       }
       sim.setBaseBgColor(0.0, 0.0, 0.0, 1.0);
       sim.setRevealBgColor(238.25 / 255, 236.33 / 255, 227.14 / 255, 1.0);
+      sim.setIsDark(1.0);
     } else {
       if (texCreamBaseRef.current && texRevealRef.current) {
         sim.setTextures(texCreamBaseRef.current, texRevealRef.current);
       }
       sim.setBaseBgColor(246 / 255, 245 / 255, 240 / 255, 1.0);
       sim.setRevealBgColor(238.25 / 255, 236.33 / 255, 227.14 / 255, 1.0);
+      sim.setIsDark(0.0);
     }
     sim.requestRender?.();
   }, []);
@@ -332,11 +358,11 @@ export default function FluidHero() {
       dyeDissipation: isMobileScreen ? 0.966 : 0.988, // Natural settling on mobile (~2s) without freezing
       pressureIterations: isMobileScreen ? 6 : 20, // 6 Jacobi iterations on 128x128 grid cuts 70% mobile draw calls
       curlStrength: 0.0,          // Zero turbulent smoke curl (pure sleek water stream)
-      splatRadius: isMobileScreen ? 0.00035 : 0.00006, // Wider natural touch swath for finger drags
+      splatRadius: isMobileScreen ? 0.00045 : 0.00024, // Wider natural fluid ribbon matching noth.in reference
       splatForce: isMobileScreen ? 4200 : 5900,
-      revealSize: isMobileScreen ? 3.4 : 3.9,
+      revealSize: isMobileScreen ? 3.4 : 3.8,
       edgeSoftness: 0.5,          // Clean liquid threshold
-      edgeWidth: 0.01,            // Razor-sharp surface tension meniscus
+      edgeWidth: 0.015,           // Razor-sharp surface tension meniscus
     };
 
     let renderer: THREE.WebGLRenderer;
@@ -499,6 +525,7 @@ export default function FluidHero() {
         uContentScale: { value: 0.58 },
         uCenterY: { value: 0.5 },
         uIsMobile: { value: isMobileScreen ? 1.0 : 0.0 },
+        uIsDark: { value: theme === "dark" ? 1.0 : 0.0 },
         uBaseBgColor: {
           value:
             theme === "dark"
@@ -690,6 +717,9 @@ export default function FluidHero() {
       },
       setRevealBgColor: (r: number, g: number, b: number, a: number) => {
         (maskMaterial.uniforms.uRevealBgColor.value as THREE.Vector4).set(r, g, b, a);
+      },
+      setIsDark: (val: number) => {
+        maskMaterial.uniforms.uIsDark.value = val;
       },
       requestRender: () => {
         activeSimFrames = Math.max(activeSimFrames, 15);
