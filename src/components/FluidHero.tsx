@@ -212,21 +212,28 @@ const maskCompositeFragShader = `
     if (boxDist > 0.001) {
       vec2 clampedUv = clamp(scaledUv, 0.001, 0.999);
       vec4 sampleBase = texture2D(uBaseTexture, clampedUv);
+
+      // High-precision adaptive edge unsharp mask to keep 2K Didone letterforms razor-sharp on mobile Retina/OLED
+      vec2 baseTexel = vec2(1.0 / 2048.0, 1.0 / 1152.0);
+      vec4 bTop    = texture2D(uBaseTexture, clamp(clampedUv + vec2(0.0, baseTexel.y), 0.001, 0.999));
+      vec4 bBottom = texture2D(uBaseTexture, clamp(clampedUv - vec2(0.0, baseTexel.y), 0.001, 0.999));
+      vec4 bLeft   = texture2D(uBaseTexture, clamp(clampedUv - vec2(baseTexel.x, 0.0), 0.001, 0.999));
+      vec4 bRight  = texture2D(uBaseTexture, clamp(clampedUv + vec2(baseTexel.x, 0.0), 0.001, 0.999));
+      vec4 bLaplacian = 4.0 * sampleBase - (bTop + bBottom + bLeft + bRight);
+      sampleBase = clamp(sampleBase + 0.35 * bLaplacian, 0.0, 1.0);
+
       baseColor = mix(uBaseBgColor, sampleBase, boxFade);
 
       vec4 sharpVideo = texture2D(uRevealTexture, clampedUv);
-      if (uIsMobile < 0.5) {
-        // Desktop high-clarity video sampling with edge-safe Laplacian unsharp mask
-        vec2 texel = vec2(1.0 / 1280.0, 1.0 / 720.0);
-        vec4 cTop    = texture2D(uRevealTexture, clamp(clampedUv + vec2(0.0, texel.y), 0.001, 0.999));
-        vec4 cBottom = texture2D(uRevealTexture, clamp(clampedUv - vec2(0.0, texel.y), 0.001, 0.999));
-        vec4 cLeft   = texture2D(uRevealTexture, clamp(clampedUv - vec2(texel.x, 0.0), 0.001, 0.999));
-        vec4 cRight  = texture2D(uRevealTexture, clamp(clampedUv + vec2(texel.x, 0.0), 0.001, 0.999));
-        vec4 laplacian = 4.0 * sharpVideo - (cTop + cBottom + cLeft + cRight);
+      vec2 texel = vec2(1.0 / 1280.0, 1.0 / 720.0);
+      vec4 cTop    = texture2D(uRevealTexture, clamp(clampedUv + vec2(0.0, texel.y), 0.001, 0.999));
+      vec4 cBottom = texture2D(uRevealTexture, clamp(clampedUv - vec2(0.0, texel.y), 0.001, 0.999));
+      vec4 cLeft   = texture2D(uRevealTexture, clamp(clampedUv - vec2(texel.x, 0.0), 0.001, 0.999));
+      vec4 cRight  = texture2D(uRevealTexture, clamp(clampedUv + vec2(texel.x, 0.0), 0.001, 0.999));
+      vec4 laplacian = 4.0 * sharpVideo - (cTop + cBottom + cLeft + cRight);
 
-        float sharpenStrength = 0.35 * smoothstep(0.02, 0.08, boxDist);
-        sharpVideo = clamp(sharpVideo + sharpenStrength * laplacian, 0.0, 1.0);
-      }
+      float sharpenStrength = 0.35 * smoothstep(0.02, 0.08, boxDist);
+      sharpVideo = clamp(sharpVideo + sharpenStrength * laplacian, 0.0, 1.0);
 
       sharpRevealColor = mix(uRevealBgColor, sharpVideo, boxFade);
     }
@@ -343,8 +350,8 @@ export default function FluidHero() {
       return;
     }
 
-    // Clamp DPR to 1.0 on mobile to cut 75%+ pixel fillrate while staying razor sharp on OLED/Retina
-    const maxDpr = isMobileScreen ? 1.0 : 2.0;
+    // Maintain 2.0 DPR on mobile and desktop so Retina & OLED screens render crystal-clear text and logos
+    const maxDpr = 2.0;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
     renderer.autoClear = false;
 
@@ -449,20 +456,20 @@ export default function FluidHero() {
       renderer.render(quadScene, quadCamera);
     };
 
-    const maxAniso = isMobileScreen ? 1 : renderer.capabilities.getMaxAnisotropy();
+    const maxAniso = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
     const textureLoader = new THREE.TextureLoader();
 
     const texDarkBase = textureLoader.load("/base_dark_16_9.png");
-    texDarkBase.minFilter = isMobileScreen ? THREE.LinearFilter : THREE.LinearMipmapLinearFilter;
+    texDarkBase.generateMipmaps = true;
+    texDarkBase.minFilter = THREE.LinearMipmapLinearFilter;
     texDarkBase.magFilter = THREE.LinearFilter;
-    texDarkBase.generateMipmaps = !isMobileScreen;
     texDarkBase.anisotropy = maxAniso;
     texDarkBaseRef.current = texDarkBase;
 
     const texCreamBase = textureLoader.load("/base_cream_16_9.jpg");
-    texCreamBase.minFilter = isMobileScreen ? THREE.LinearFilter : THREE.LinearMipmapLinearFilter;
+    texCreamBase.generateMipmaps = true;
+    texCreamBase.minFilter = THREE.LinearMipmapLinearFilter;
     texCreamBase.magFilter = THREE.LinearFilter;
-    texCreamBase.generateMipmaps = !isMobileScreen;
     texCreamBase.anisotropy = maxAniso;
     texCreamBaseRef.current = texCreamBase;
 
@@ -683,12 +690,14 @@ export default function FluidHero() {
       const height = window.innerHeight;
       planeAspect = width / height;
 
+      const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
+      renderer.setPixelRatio(dpr);
       renderer.setSize(width, height, false);
       maskMaterial.uniforms.uPlaneAspect.value = planeAspect;
 
       const isSmallPhone = width <= 480;
       const isMobile = width <= 768;
-      maskMaterial.uniforms.uContentScale.value = isSmallPhone ? 0.86 : isMobile ? 0.75 : 0.58;
+      maskMaterial.uniforms.uContentScale.value = isSmallPhone ? 0.88 : isMobile ? 0.78 : 0.58;
 
       activeSimFrames = Math.max(activeSimFrames, 10);
       startLoop();
