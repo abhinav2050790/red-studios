@@ -226,9 +226,11 @@ const maskCompositeFragShader = `
       sharpRevealColor = mix(uRevealBgColor, sharpVideo, boxFade);
     }
 
-    // Pure liquid mask with crisp surface tension (identical to noth.in reference)
+    // Pure liquid mask with crisp surface tension that dissolves fluently at the tail end
     float raw = dye * uRevealSize;
-    float mask = smoothstep(uEdgeSoftness, uEdgeSoftness + uEdgeWidth, raw);
+    float crisp = smoothstep(uEdgeSoftness, uEdgeSoftness + uEdgeWidth, raw);
+    float soft  = smoothstep(0.01, uEdgeSoftness, raw);
+    float mask  = mix(soft * soft, crisp, smoothstep(0.12, 0.52, raw));
     mask = clamp(mask, 0.0, 1.0);
 
     gl_FragColor = mix(baseColor, sharpRevealColor, mask);
@@ -541,7 +543,7 @@ export default function FluidHero() {
         const dist = Math.hypot(u, f);
 
         if (dist > 0.0001 && scrollS > 0.001) {
-          activeSimFrames = isMobileScreen ? 280 : 360;
+          activeSimFrames = isMobileScreen ? 300 : 380;
 
           // Velocity splat: imparts physical hydrodynamic momentum along drag vector
           splatMat.uniforms.uTarget.value = velocity.read.texture;
@@ -594,7 +596,13 @@ export default function FluidHero() {
         velocity.swap();
 
         // 4. Advection (Dye) with scroll-accelerated dissipation matching noth.in
-        const curDyeDissipation = settings.dyeDissipation + (0.97 - settings.dyeDissipation) * scrollI;
+        let curDyeDissipation = settings.dyeDissipation + (0.97 - settings.dyeDissipation) * scrollI;
+        // Fluent tail-end decay: in the final 80 frames, smoothly accelerate dissipation
+        // so dye continuously dissolves into absolute zero with zero pop or blip
+        if (activeSimFrames < 80) {
+          const tailFade = activeSimFrames / 80;
+          curDyeDissipation *= 0.94 + 0.06 * tailFade;
+        }
         advectionMat.uniforms.uVelocity.value = velocity.read.texture;
         advectionMat.uniforms.uSource.value = dye.read.texture;
         advectionMat.uniforms.uTexelSize.value = dyeTexelSize;
