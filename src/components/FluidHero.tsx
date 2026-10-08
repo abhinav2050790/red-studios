@@ -50,11 +50,7 @@ const splatShader = `
 
   void main() {
     vec2 p = vUv - uPoint;
-    if (uAspectRatio >= 1.0) {
-      p.x *= uAspectRatio;
-    } else {
-      p.y /= uAspectRatio;
-    }
+    p.x *= uAspectRatio;
     vec3 splat = exp(-dot(p, p) / uRadius) * uColor;
     vec3 base = texture2D(uTarget, vUv).xyz;
     gl_FragColor = vec4(base + splat, 1.0);
@@ -258,14 +254,8 @@ const maskCompositeFragShader = `
     // On background (isLogo == 0): Rich solid ink ribbon
     // In dark theme: pure white/cream ink ribbon; in cream theme: rich jet black ink ribbon
     // Inside the logo/typography (isLogo == 1): Reveals the dynamic 3D metallic video
-    vec4 inkColor = (uIsDark > 0.5) ? vec4(0.96, 0.96, 0.96, 1.0) : vec4(0.05, 0.05, 0.05, 1.0);
+    vec4 inkColor = (uIsDark > 0.5) ? vec4(0.96, 0.96, 0.96, 1.0) : vec4(0.04, 0.04, 0.04, 1.0);
     vec4 liquidContent = mix(inkColor, sharpVideo, isLogo);
-
-    // Specular meniscus highlight along the fluid boundary (surface tension sheen)
-    float edgeHighlight = smoothstep(uEdgeSoftness, uEdgeSoftness + 0.015, raw) * 
-                          (1.0 - smoothstep(uEdgeSoftness + 0.015, uEdgeSoftness + 0.045, raw));
-    float highlightAmt = (uIsDark > 0.5) ? 0.25 : 0.15;
-    liquidContent.rgb += vec3(edgeHighlight * highlightAmt);
 
     gl_FragColor = mix(baseColor, liquidContent, mask);
   }
@@ -354,15 +344,15 @@ export default function FluidHero() {
     const settings = {
       simResolution: isMobileScreen ? 128 : 256,
       dyeResolution: isMobileScreen ? 256 : 512,
-      velocityDissipation: 0.962, // Gliding liquid momentum
-      dyeDissipation: isMobileScreen ? 0.966 : 0.988, // Natural settling on mobile (~2s) without freezing
-      pressureIterations: isMobileScreen ? 6 : 20, // 6 Jacobi iterations on 128x128 grid cuts 70% mobile draw calls
-      curlStrength: 0.0,          // Zero turbulent smoke curl (pure sleek water stream)
-      splatRadius: isMobileScreen ? 0.00045 : 0.00024, // Wider natural fluid ribbon matching noth.in reference
-      splatForce: isMobileScreen ? 4200 : 5900,
-      revealSize: isMobileScreen ? 3.4 : 3.8,
-      edgeSoftness: 0.5,          // Clean liquid threshold
-      edgeWidth: 0.015,           // Razor-sharp surface tension meniscus
+      velocityDissipation: 0.962, // Exact noth.in
+      dyeDissipation: isMobileScreen ? 0.968 : 0.988, // Exact noth.in
+      pressureIterations: isMobileScreen ? 8 : 20, // Exact noth.in
+      curlStrength: 0.0,
+      splatRadius: isMobileScreen ? 0.00012 : 0.00006, // Exact noth.in 6e-5!
+      splatForce: 5900, // Exact noth.in 5900!
+      revealSize: 3.9,  // Exact noth.in 3.9!
+      edgeSoftness: 0.5, // Exact noth.in 0.5!
+      edgeWidth: 0.01,  // Exact noth.in 0.01!
     };
 
     let renderer: THREE.WebGLRenderer;
@@ -550,9 +540,10 @@ export default function FluidHero() {
     let isHeroInView = true;
     let isLoopRunning = false;
 
-    const mouseSegments: { x0: number; y0: number; x1: number; y1: number }[] = [];
-    let prevMouse: { x: number; y: number } | null = null;
-    let hasPrevMouse = false;
+    const mouse = { x: 0.5, y: 0.5 };
+    const prevMouse = { x: 0.5, y: 0.5 };
+    let mouseHasMoved = false;
+    let hasInitialMouse = false;
 
     const animate = () => {
       if (!isHeroInView) {
@@ -560,45 +551,47 @@ export default function FluidHero() {
         return;
       }
 
-      // 1. Splat velocity & dye along smooth unbroken segment steps
-      if (mouseSegments.length > 0) {
-        activeSimFrames = isMobileScreen ? 260 : 360;
-        const maxSegs = isMobileScreen ? 4 : 16;
-        const segs = mouseSegments.splice(-maxSegs);
-        mouseSegments.length = 0;
+      // Exact scroll fade computation matching noth.in
+      const containerRect = container.getBoundingClientRect();
+      const containerH = containerRect.height || 1;
+      let scrollFade = -containerRect.top / containerH;
+      if (scrollFade < 0) scrollFade = 0;
+      if (scrollFade > 1) scrollFade = 1;
+      const scrollI = scrollFade * scrollFade;
+      const scrollS = 1.0 - scrollI;
 
-        const maxSteps = isMobileScreen ? 2 : 6;
-        const stepDiv = isMobileScreen ? 0.018 : 0.008;
+      // 1. Single hydrodynamic impulse per frame (exact Navier-Stokes formulation from noth.in)
+      if (mouseHasMoved) {
+        const u = mouse.x - prevMouse.x;
+        const f = mouse.y - prevMouse.y;
+        const dist = Math.hypot(u, f);
 
-        for (let i = 0; i < segs.length; i++) {
-          const seg = segs[i];
-          const dx = seg.x1 - seg.x0;
-          const dy = seg.y1 - seg.y0;
-          const dist = Math.hypot(dx, dy);
-          const steps = Math.min(maxSteps, Math.max(1, Math.ceil(dist / stepDiv)));
+        if (dist > 0.0001 && scrollS > 0.001) {
+          activeSimFrames = isMobileScreen ? 180 : 220;
 
-          for (let step = 1; step <= steps; step++) {
-            const t = step / steps;
-            const px = seg.x0 + dx * t;
-            const py = seg.y0 + dy * t;
+          // Velocity splat: imparts physical hydrodynamic momentum along drag vector
+          splatMat.uniforms.uTarget.value = velocity.read.texture;
+          splatMat.uniforms.uAspectRatio.value = planeAspect;
+          (splatMat.uniforms.uPoint.value as THREE.Vector2).set(mouse.x, mouse.y);
+          (splatMat.uniforms.uColor.value as THREE.Vector3).set(
+            u * settings.splatForce * scrollS,
+            f * settings.splatForce * scrollS,
+            0
+          );
+          splatMat.uniforms.uRadius.value = settings.splatRadius;
+          renderPass(splatMat, velocity.write);
+          velocity.swap();
 
-            // Velocity splat: imparts physical momentum along drag vector
-            splatMat.uniforms.uTarget.value = velocity.read.texture;
-            splatMat.uniforms.uAspectRatio.value = planeAspect;
-            (splatMat.uniforms.uPoint.value as THREE.Vector2).set(px, py);
-            (splatMat.uniforms.uColor.value as THREE.Vector3).set(dx * settings.splatForce, dy * settings.splatForce, 0);
-            splatMat.uniforms.uRadius.value = settings.splatRadius;
-            renderPass(splatMat, velocity.write);
-            velocity.swap();
-
-            // Dye splat: injects white reveal dye
-            splatMat.uniforms.uTarget.value = dye.read.texture;
-            (splatMat.uniforms.uColor.value as THREE.Vector3).set(1.0, 1.0, 1.0);
-            splatMat.uniforms.uRadius.value = settings.splatRadius;
-            renderPass(splatMat, dye.write);
-            dye.swap();
-          }
+          // Dye splat: injects silky liquid mask dye
+          splatMat.uniforms.uTarget.value = dye.read.texture;
+          (splatMat.uniforms.uColor.value as THREE.Vector3).set(scrollS, scrollS, scrollS);
+          splatMat.uniforms.uRadius.value = settings.splatRadius;
+          renderPass(splatMat, dye.write);
+          dye.swap();
         }
+        prevMouse.x = mouse.x;
+        prevMouse.y = mouse.y;
+        mouseHasMoved = false;
       }
 
       if (activeSimFrames > 0) {
@@ -626,12 +619,13 @@ export default function FluidHero() {
         renderPass(advectionMat, velocity.write);
         velocity.swap();
 
-        // 4. Advection (Dye) with uDt = 1.0 for forward liquid water throw
+        // 4. Advection (Dye) with scroll-accelerated dissipation matching noth.in
+        const curDyeDissipation = settings.dyeDissipation + (0.97 - settings.dyeDissipation) * scrollI;
         advectionMat.uniforms.uVelocity.value = velocity.read.texture;
         advectionMat.uniforms.uSource.value = dye.read.texture;
         advectionMat.uniforms.uTexelSize.value = dyeTexelSize;
         advectionMat.uniforms.uDt.value = 1.0;
-        advectionMat.uniforms.uDissipation.value = settings.dyeDissipation;
+        advectionMat.uniforms.uDissipation.value = curDyeDissipation;
         renderPass(advectionMat, dye.write);
         dye.swap();
 
@@ -782,95 +776,61 @@ export default function FluidHero() {
     window.addEventListener("resize", resize);
     window.addEventListener("orientationchange", resize);
 
-    const onMouseMoveNormalized = (normX: number, normY: number) => {
-      const x = Math.max(0, Math.min(1, normX));
-      const y = 1.0 - Math.max(0, Math.min(1, normY)); // Invert for WebGL coordinates
-
-      if (!hasPrevMouse || !prevMouse) {
-        prevMouse = { x, y };
-        hasPrevMouse = true;
-        return;
-      }
-
-      const dx = x - prevMouse.x;
-      const dy = y - prevMouse.y;
-      const dist = Math.hypot(dx, dy);
-
-      if (dist > 0.0001) {
-        mouseSegments.push({
-          x0: prevMouse.x,
-          y0: prevMouse.y,
-          x1: x,
-          y1: y,
-        });
-        prevMouse = { x, y };
-      }
-    };
-
     const handleMouseMove = (e: MouseEvent) => {
       const rect = container.getBoundingClientRect();
-      if (e.clientY < rect.top || e.clientY > rect.bottom) {
-        hasPrevMouse = false;
-        prevMouse = null;
+      const nx = (e.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (e.clientY - rect.top) / rect.height;
+      if (nx < -0.15 || nx > 1.15 || ny < -0.15 || ny > 1.15) {
+        hasInitialMouse = false;
         return;
       }
-
-      const normX = (e.clientX - rect.left) / rect.width;
-      const normY = (e.clientY - rect.top) / rect.height;
-      onMouseMoveNormalized(normX, normY);
+      if (!hasInitialMouse) {
+        prevMouse.x = nx;
+        prevMouse.y = ny;
+        hasInitialMouse = true;
+      }
+      mouse.x = nx;
+      mouse.y = ny;
+      mouseHasMoved = true;
       startLoop();
     };
 
     const handleMouseLeave = () => {
-      hasPrevMouse = false;
-      prevMouse = null;
-      activeSimFrames = Math.max(activeSimFrames, isMobileScreen ? 200 : 280);
+      hasInitialMouse = false;
+      mouseHasMoved = false;
     };
 
     const handleTouchStart = (e: TouchEvent) => {
-      hasPrevMouse = false;
-      prevMouse = null;
-      if (e.touches.length > 0) {
-        const t = e.touches[0];
-        const rect = container.getBoundingClientRect();
-        if (t.clientY < rect.top || t.clientY > rect.bottom || t.clientX < rect.left || t.clientX > rect.right) return;
-
-        const normX = (t.clientX - rect.left) / rect.width;
-        const normY = (t.clientY - rect.top) / rect.height;
-        onMouseMoveNormalized(normX, normY);
-        // Instant tactile fluid response on initial touch
-        mouseSegments.push({
-          x0: normX,
-          y0: 1.0 - normY,
-          x1: normX + 0.001,
-          y1: 1.0 - normY + 0.001,
-        });
-        startLoop();
-      }
+      if (!e.touches.length) return;
+      const t = e.touches[0];
+      const rect = container.getBoundingClientRect();
+      const nx = (t.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (t.clientY - rect.top) / rect.height;
+      prevMouse.x = nx;
+      prevMouse.y = ny;
+      mouse.x = nx;
+      mouse.y = ny;
+      hasInitialMouse = true;
+      mouseHasMoved = false;
+      startLoop();
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        const t = e.touches[0];
-        const rect = container.getBoundingClientRect();
-        if (t.clientY < rect.top || t.clientY > rect.bottom || t.clientX < rect.left || t.clientX > rect.right) {
-          hasPrevMouse = false;
-          prevMouse = null;
-          return;
-        }
-
-        const normX = (t.clientX - rect.left) / rect.width;
-        const normY = (t.clientY - rect.top) / rect.height;
-        onMouseMoveNormalized(normX, normY);
-        startLoop();
-      }
+      if (!e.touches.length) return;
+      const t = e.touches[0];
+      const rect = container.getBoundingClientRect();
+      const nx = (t.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (t.clientY - rect.top) / rect.height;
+      mouse.x = nx;
+      mouse.y = ny;
+      mouseHasMoved = true;
+      startLoop();
     };
 
     const handleTouchEnd = () => {
-      hasPrevMouse = false;
-      prevMouse = null;
-      activeSimFrames = Math.max(activeSimFrames, isMobileScreen ? 200 : 280);
-      startLoop();
+      prevMouse.x = mouse.x;
+      prevMouse.y = mouse.y;
+      mouseHasMoved = false;
     };
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
@@ -890,7 +850,7 @@ export default function FluidHero() {
       ([entry]) => {
         isHeroInView = entry.isIntersecting;
         if (isHeroInView) {
-          activeSimFrames = Math.max(activeSimFrames, 5);
+          activeSimFrames = Math.max(activeSimFrames, 10);
           startLoop();
         } else {
           stopLoop();
@@ -915,6 +875,27 @@ export default function FluidHero() {
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("click", playVideos);
+      window.removeEventListener("touchstart", playVideos);
+
+      velocity.read.dispose();
+      velocity.write.dispose();
+      dye.read.dispose();
+      dye.write.dispose();
+      pressure.read.dispose();
+      pressure.write.dispose();
+      divergenceRT.dispose();
+      curlRT.dispose();
+      quadMesh.geometry.dispose();
+      screenMesh.geometry.dispose();
+      splatMat.dispose();
+      curlMat.dispose();
+      vorticityMat.dispose();
+      advectionMat.dispose();
+      divergenceMat.dispose();
+      pressureMat.dispose();
+      gradientSubMat.dispose();
+      maskMaterial.dispose();
       renderer.dispose();
     };
   }, [theme]);
