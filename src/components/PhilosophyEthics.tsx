@@ -15,7 +15,7 @@ export default function PhilosophyEthics() {
             <span className="h-1.5 w-1.5 rounded-full bg-black" />
             Operating Principles
           </div>
-          <h2 className="font-serif text-3xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
+          <h2 className="font-serif text-2xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
             How We Work Is Who We Are.
           </h2>
           <p className="mt-4 sm:mt-6 text-sm sm:text-lg lg:text-xl leading-relaxed text-black/60">
@@ -45,7 +45,7 @@ export default function PhilosophyEthics() {
                 </div>
 
                 {/* Title */}
-                <h3 className="mt-5 font-serif text-2xl font-bold text-black">
+                <h3 className="mt-5 font-serif text-xl sm:text-2xl font-bold text-black">
                   {principle.title}
                 </h3>
 

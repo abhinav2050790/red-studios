@@ -60,6 +60,12 @@ button, a, input, textarea, select {
   }
 }
 
+/* Typography overflow safeguard across all mobile devices */
+h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

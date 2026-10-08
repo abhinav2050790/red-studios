@@ -25,7 +25,7 @@ export default function Services() {
             <span className="h-1.5 w-1.5 rounded-full bg-black" />
             Core Disciplines
           </div>
-          <h2 className="font-serif text-3xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
+          <h2 className="font-serif text-2xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
             Prêt-à-porter Visuals & Code.
           </h2>
           <p className="mt-4 sm:mt-6 text-sm sm:text-lg lg:text-xl leading-relaxed text-black/60">
@@ -64,7 +64,7 @@ export default function Services() {
                   </div>
 
                   {/* Title & Subtitle */}
-                  <h3 className="mt-8 font-serif text-2xl sm:text-3xl font-bold tracking-tight text-black">
+                  <h3 className="mt-8 font-serif text-xl sm:text-3xl font-bold tracking-tight text-black">
                     {service.title}
                   </h3>
                   <p className="mt-2 font-mono text-xs uppercase tracking-wider text-black/50">

@@ -59,7 +59,7 @@ export default function TestimonialsCarousel() {
             <span className="h-1.5 w-1.5 rounded-full bg-black" />
             Client Endorsements
           </div>
-          <h2 className="font-serif text-3xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
+          <h2 className="font-serif text-2xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
             Trusted By Visionary Founders.
           </h2>
           <p className="mt-4 sm:mt-6 text-sm sm:text-lg lg:text-xl leading-relaxed text-black/60">
@@ -106,7 +106,7 @@ export default function TestimonialsCarousel() {
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.35 }}
                 >
-                  <blockquote className="font-serif text-2xl sm:text-3xl lg:text-4xl font-medium leading-relaxed text-black">
+                  <blockquote className="font-serif text-lg sm:text-2xl lg:text-4xl font-medium leading-relaxed text-black">
                     &ldquo;{active.quote}&rdquo;
                   </blockquote>
 

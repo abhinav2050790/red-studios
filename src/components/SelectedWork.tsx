@@ -27,7 +27,7 @@ export default function SelectedWork() {
 
   return (
     <section id="work" className="relative z-10 scroll-mt-24 bg-[#FFFFFF] py-36 sm:py-48 lg:py-60 text-black">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">
           <div>
@@ -35,7 +35,7 @@ export default function SelectedWork() {
               <span className="h-1.5 w-1.5 rounded-full bg-black" />
               Lookbook Archive
             </div>
-            <h2 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
+            <h2 className="font-serif text-2xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
               Selected Work & Stills.
             </h2>
             <p className="mt-4 max-w-2xl text-base text-black/60 sm:text-lg">

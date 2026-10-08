@@ -110,7 +110,7 @@ export default function WorkLightbox({ project, onClose }: WorkLightboxProps) {
               {/* Title */}
               <h2
                 id="lightbox-title"
-                className="mt-4 font-serif text-3xl sm:text-4xl font-bold tracking-tight text-black"
+                className="mt-4 font-serif text-2xl sm:text-4xl font-bold tracking-tight text-black"
               >
                 {project.title}
               </h2>

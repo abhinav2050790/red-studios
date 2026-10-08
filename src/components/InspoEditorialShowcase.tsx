@@ -225,7 +225,7 @@ export default function InspoEditorialShowcase() {
                   </p>
 
                   {/* Huge Didone Vanity Title */}
-                  <h1 className="font-serif text-4xl sm:text-7xl lg:text-9xl font-bold tracking-tight text-black leading-none mb-6">
+                  <h1 className="font-serif text-3xl min-[400px]:text-4xl sm:text-7xl lg:text-9xl font-bold tracking-tight text-black leading-none mb-6">
                     VANITY
                   </h1>
 
@@ -357,19 +357,19 @@ export default function InspoEditorialShowcase() {
               </div>
 
               {/* Right Column: Stacked EDIT / ORIAL + Vertical Photo */}
-              <div className="lg:col-span-4 flex items-center justify-between gap-6">
-                {/* Giant Stacked Typography: EDIT (horizontal) + ORIAL (vertical) */}
-                <div className="flex flex-col items-center">
-                  <span className="font-serif text-5xl sm:text-7xl font-bold text-black tracking-tight">
+              <div className="lg:col-span-4 flex flex-col sm:flex-row items-center justify-between gap-6">
+                {/* Stacked Typography */}
+                <div className="flex flex-row sm:flex-col items-center gap-2 sm:gap-0">
+                  <span className="font-serif text-3xl min-[400px]:text-4xl sm:text-6xl lg:text-7xl font-bold text-black tracking-tight">
                     EDIT
                   </span>
-                  <span className="font-serif text-5xl sm:text-7xl font-bold text-black tracking-widest [writing-mode:vertical-rl] mt-2">
+                  <span className="font-serif text-3xl min-[400px]:text-4xl sm:text-6xl lg:text-7xl font-bold text-black tracking-wide sm:tracking-widest sm:[writing-mode:vertical-rl] sm:mt-2">
                     ORIAL
                   </span>
                 </div>
 
                 {/* Vertical Photo: Model with Straw */}
-                <div className="relative aspect-[3/4] w-48 sm:w-56 overflow-hidden shadow-xl">
+                <div className="relative aspect-[3/4] w-40 min-[400px]:w-48 sm:w-56 overflow-hidden shadow-xl">
                   <Image
                     src="/editorial_model_02.jpg"
                     alt="Editorial model with straw"
@@ -424,7 +424,7 @@ export default function InspoEditorialShowcase() {
 
               {/* Giant Serif Typography Overlapping Center */}
               <div className="relative z-10 w-full text-center">
-                <h2 className="font-serif text-5xl sm:text-8xl lg:text-[10rem] font-bold tracking-tight text-black leading-none">
+                <h2 className="font-serif text-3xl min-[400px]:text-4xl sm:text-7xl lg:text-[10rem] font-bold tracking-tight text-black leading-none">
                   UNLEASH
                 </h2>
               </div>
@@ -455,7 +455,7 @@ export default function InspoEditorialShowcase() {
 
                 {/* Center: Crouching Model */}
                 <div className="md:col-span-4 flex justify-center">
-                  <div className="relative aspect-[3/4] w-64 sm:w-72 overflow-hidden shadow-2xl">
+                  <div className="relative aspect-[3/4] w-52 min-[400px]:w-64 sm:w-72 overflow-hidden shadow-2xl">
                     <Image
                       src="/editorial_model_03.jpg"
                       alt="Unleash Creative Sensuality"
@@ -466,8 +466,8 @@ export default function InspoEditorialShowcase() {
                 </div>
 
                 {/* Right Column: Giant Bottom Word SENSUALITY */}
-                <div className="md:col-span-4 text-right">
-                  <h2 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold text-black tracking-tight leading-none">
+                <div className="md:col-span-4 text-center md:text-right mt-4 md:mt-0">
+                  <h2 className="font-serif text-2xl min-[400px]:text-3xl sm:text-5xl lg:text-7xl font-bold text-black tracking-tight leading-none">
                     SENSUALITY
                   </h2>
                 </div>
@@ -533,7 +533,7 @@ export default function InspoEditorialShowcase() {
                 {/* Top Section with Rotating Circular Text Stamp */}
                 <div className="flex items-start justify-between gap-6">
                   <div>
-                    <h2 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
+                    <h2 className="font-serif text-2xl min-[400px]:text-3xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
                       BE YOUR<br />OWN MUSE
                     </h2>
                   </div>
@@ -626,9 +626,9 @@ export default function InspoEditorialShowcase() {
               className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center"
             >
               {/* Left Column: Frosted Glass Photo + Vertical DON'T HIDE YOURSELF */}
-              <div className="lg:col-span-6 flex items-center gap-6 sm:gap-10">
+              <div className="lg:col-span-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-10">
                 {/* Photo through frosted glass */}
-                <div className="relative aspect-[3/4] w-full max-w-sm overflow-hidden shadow-2xl">
+                <div className="relative aspect-[3/4] w-full max-w-[280px] sm:max-w-sm overflow-hidden shadow-2xl">
                   <Image
                     src="/editorial_model_05.jpg"
                     alt="Don't hide yourself"
@@ -638,11 +638,11 @@ export default function InspoEditorialShowcase() {
                 </div>
 
                 {/* Vertical Stacked Serif Typography: DON'T HIDE YOURSELF */}
-                <div className="flex flex-col items-center">
-                  <span className="font-serif text-3xl sm:text-5xl font-bold text-black tracking-widest [writing-mode:vertical-rl]">
+                <div className="flex flex-row sm:flex-col items-center gap-2 sm:gap-0 mt-2 sm:mt-0">
+                  <span className="font-serif text-xl min-[400px]:text-2xl sm:text-4xl lg:text-5xl font-bold text-black tracking-wide sm:tracking-widest sm:[writing-mode:vertical-rl]">
                     DON&apos;T HIDE
                   </span>
-                  <span className="font-serif text-3xl sm:text-5xl font-bold text-black tracking-widest [writing-mode:vertical-rl] mt-4">
+                  <span className="font-serif text-xl min-[400px]:text-2xl sm:text-4xl lg:text-5xl font-bold text-black tracking-wide sm:tracking-widest sm:[writing-mode:vertical-rl] sm:mt-4">
                     YOURSELF
                   </span>
                 </div>
@@ -715,7 +715,7 @@ export default function InspoEditorialShowcase() {
               {/* Top Lookbook Title with Extended Rule */}
               <div className="w-full">
                 <div className="flex items-center gap-4 flex-wrap">
-                  <h2 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-black uppercase">
+                  <h2 className="font-serif text-xl min-[400px]:text-2xl sm:text-4xl lg:text-6xl font-bold tracking-tight text-black uppercase">
                     THE LOOKBOOK SEASON 025—
                   </h2>
                 </div>
@@ -822,7 +822,7 @@ export default function InspoEditorialShowcase() {
 
               {/* Center Content: Newsletter & Discovery Intake */}
               <div className="my-auto max-w-xl">
-                <h2 className="font-sans text-3xl sm:text-5xl font-bold tracking-tight text-black uppercase mb-4">
+                <h2 className="font-sans text-2xl min-[400px]:text-3xl sm:text-5xl font-bold tracking-tight text-black uppercase mb-4">
                   SUBSCRIBE NEWSLETTER
                 </h2>
                 <p className="text-xs sm:text-sm text-black/70 leading-relaxed mb-8">

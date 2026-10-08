@@ -170,24 +170,35 @@ const maskCompositeFragShader = `
   uniform vec4 uRevealBgColor;
   varying vec2 vUv;
 
-  vec2 coverUv(vec2 uv, float imageAspect, float planeAspect) {
-    vec2 ratio = vec2(
-      min(planeAspect / imageAspect, 1.0),
-      min(imageAspect / planeAspect, 1.0)
-    );
-    return vec2(
-      uv.x * ratio.x + (1.0 - ratio.x) * 0.5,
-      uv.y * ratio.y + (1.0 - ratio.y) * 0.5
-    );
+  vec2 getMappedUv(vec2 uv, float imageAspect, float planeAspect, float contentScale) {
+    if (planeAspect < 1.0) {
+      // Mobile / Portrait: Fit the 16:9 canvas horizontally within screen with responsive margins
+      float wScale = contentScale;
+      float hScale = contentScale * (planeAspect / imageAspect);
+      return vec2(
+        (uv.x - 0.5) / wScale + 0.5,
+        (uv.y - 0.5) / hScale + 0.5
+      );
+    } else {
+      // Desktop / Landscape: Cover mapping matching original desktop scale
+      vec2 ratio = vec2(
+        min(planeAspect / imageAspect, 1.0),
+        min(imageAspect / planeAspect, 1.0)
+      );
+      vec2 sharedUv = vec2(
+        uv.x * ratio.x + (1.0 - ratio.x) * 0.5,
+        uv.y * ratio.y + (1.0 - ratio.y) * 0.5
+      );
+      return (sharedUv - 0.5) / contentScale + 0.5;
+    }
   }
 
   void main() {
     vec2 uv = vUv;
     float dye = texture2D(uDye, uv).r;
 
-    // Shared 16:9 UV mapping
-    vec2 sharedUv = coverUv(uv, 16.0 / 9.0, uPlaneAspect);
-    vec2 scaledUv = (sharedUv - 0.5) / uContentScale + 0.5;
+    // Responsive UV mapping: guarantees full 16:9 logo is visible and never cut off on mobile phones
+    vec2 scaledUv = getMappedUv(uv, 16.0 / 9.0, uPlaneAspect, uContentScale);
 
     // Seamless feathered boundary calculation for centered 16:9 logo box
     vec2 edgeDist = min(scaledUv, 1.0 - scaledUv);
@@ -513,8 +524,9 @@ export default function FluidHero() {
       renderer.setSize(width, height, false);
       maskMaterial.uniforms.uPlaneAspect.value = planeAspect;
 
+      const isSmallPhone = width <= 480;
       const isMobile = width <= 768;
-      maskMaterial.uniforms.uContentScale.value = isMobile ? 0.85 : 0.58;
+      maskMaterial.uniforms.uContentScale.value = isSmallPhone ? 0.86 : isMobile ? 0.75 : 0.58;
     };
     resize();
     window.addEventListener("resize", resize);
@@ -822,24 +834,24 @@ export default function FluidHero() {
       </div>
 
       {/* Page UI Container (Pristine layout matching index.html) */}
-      <div className="relative z-10 w-full h-full flex flex-col justify-between p-6 sm:p-10 lg:px-14 lg:py-9 pointer-events-none">
+      <div className="relative z-10 w-full h-full flex flex-col justify-between p-4 sm:p-10 lg:px-14 lg:py-9 pointer-events-none">
         {/* Top Header */}
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 pointer-events-auto w-full">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 sm:gap-4 pointer-events-auto w-full">
           <div
-            className="font-['Space_Grotesk',sans-serif] text-xs sm:text-[0.95rem] leading-[1.4] tracking-tight font-medium"
+            className="font-['Space_Grotesk',sans-serif] text-[11px] sm:text-[0.95rem] leading-[1.35] tracking-tight font-medium"
             style={{ color: isCream ? "#666666" : "#888888" }}
           >
             Not a style, a perspective.<br />
-            <span className="font-semibold" style={{ color: isCream ? "#111111" : "#ffffff" }}>
+            <span className="font-semibold text-xs sm:text-base" style={{ color: isCream ? "#111111" : "#ffffff" }}>
               Because Red Studios is Everythin&apos;.
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4 self-end sm:self-auto">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 self-start sm:self-auto">
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="interactive-target flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[11px] sm:text-xs font-semibold backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95"
+              className="interactive-target flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-semibold backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95"
               style={{
                 background: isCream ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)",
                 border: isCream ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.12)",
@@ -863,7 +875,7 @@ export default function FluidHero() {
             {/* Book a Call CTA */}
             <a
               href="#call"
-              className="interactive-target px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
+              className="interactive-target px-3 py-1.5 sm:px-5 sm:py-2 rounded-full text-[11px] sm:text-sm font-semibold backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
               style={{
                 background: isCream ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)",
                 border: isCream ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.12)",
@@ -879,9 +891,9 @@ export default function FluidHero() {
         <div className="flex-1 pointer-events-none" />
 
         {/* Bottom Instruction Tag & Scroll Down Pill */}
-        <div className="flex flex-col items-center gap-3 my-4 pointer-events-auto">
+        <div className="flex flex-col items-center gap-2 sm:gap-3 my-2 sm:my-4 pointer-events-auto max-w-[92vw] mx-auto">
           <div
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-['Space_Grotesk',sans-serif] font-semibold tracking-wider uppercase backdrop-blur-md pointer-events-none text-center"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[9px] min-[380px]:text-[10px] sm:text-[11px] font-['Space_Grotesk',sans-serif] font-semibold tracking-wider uppercase backdrop-blur-md pointer-events-none text-center max-w-full"
             style={{
               background: isCream ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)",
               border: isCream ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.12)",
@@ -889,13 +901,13 @@ export default function FluidHero() {
             }}
           >
             <span>
-              ● Navier-Stokes Fluid Reveal — {isTouch ? "Drag finger across screen" : "Move cursor across the logo"}
+              ● Navier-Stokes — {isTouch ? "Drag finger across logo" : "Move cursor across logo"}
             </span>
           </div>
 
           <a
             href="#editorial-showcase"
-            className="interactive-target inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-['Space_Grotesk',sans-serif] tracking-wider uppercase transition-all duration-200 hover:text-[#ff3333]"
+            className="interactive-target inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-['Space_Grotesk',sans-serif] tracking-wider uppercase transition-all duration-200 hover:text-[#ff3333]"
             style={{
               color: isCream ? "#777777" : "#aaaaaa",
             }}
@@ -907,25 +919,27 @@ export default function FluidHero() {
 
         {/* Footer */}
         <footer
-          className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-4 pointer-events-auto text-xs"
+          className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-4 pointer-events-auto text-[10px] sm:text-xs"
           style={{ color: isCream ? "#666666" : "#888888" }}
         >
-          <div className="flex items-center gap-4 text-center sm:text-left">
-            <span className="tracking-wider uppercase font-semibold text-[10px] sm:text-xs">LONDON / TOKYO / NEW YORK</span>
+          <div className="flex items-center gap-3 text-center sm:text-left">
+            <span className="tracking-wider uppercase font-semibold text-[9px] min-[380px]:text-[10px] sm:text-xs">
+              LONDON / TOKYO / NEW YORK
+            </span>
             <span className="hidden sm:inline opacity-60">© 2026 Red Studios. All rights reserved.</span>
           </div>
 
-          <nav className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-[11px] sm:text-xs">
-            <a href="#instagram" className="interactive-target hover:text-[#ff3333] transition-colors py-1">
+          <nav className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-[10px] sm:text-xs">
+            <a href="#instagram" className="interactive-target hover:text-[#ff3333] transition-colors py-0.5 sm:py-1">
               Instagram
             </a>
-            <a href="#twitter" className="interactive-target hover:text-[#ff3333] transition-colors py-1">
+            <a href="#twitter" className="interactive-target hover:text-[#ff3333] transition-colors py-0.5 sm:py-1">
               Twitter / X
             </a>
-            <a href="#behance" className="interactive-target hover:text-[#ff3333] transition-colors py-1">
+            <a href="#behance" className="interactive-target hover:text-[#ff3333] transition-colors py-0.5 sm:py-1">
               Behance
             </a>
-            <a href="#brief" className="interactive-target hover:text-[#ff3333] transition-colors py-1">
+            <a href="#brief" className="interactive-target hover:text-[#ff3333] transition-colors py-0.5 sm:py-1">
               Contact
             </a>
           </nav>

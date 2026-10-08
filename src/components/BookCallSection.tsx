@@ -31,7 +31,7 @@ export default function BookCallSection() {
             </div>
 
             {/* Headline */}
-            <h2 className="mt-8 font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
+            <h2 className="mt-8 font-serif text-2xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-black leading-tight">
               Ready To Elevate Your Brand? <br className="hidden sm:inline" />
               <span>Let&apos;s talk in 30 minutes.</span>
             </h2>
