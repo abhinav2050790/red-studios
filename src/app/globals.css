@@ -47,16 +47,33 @@ body {
   overflow-x: hidden;
   position: relative;
   touch-action: pan-y;
+  overscroll-behavior-x: none;
 }
 
 button, a, input, textarea, select {
   touch-action: manipulation;
 }
 
-/* Prevent iOS Safari auto-zoom on input focus while keeping desktop design */
+/* Prevent iOS Safari auto-zoom and eliminate expensive GPU backdrop-blur lag during scroll */
 @media screen and (max-width: 768px) {
   input, textarea, select {
     font-size: 16px !important;
+  }
+
+  /* Disabling live backdrop-filter on mobile screens saves massive GPU compositor fillrate and avoids frame drops */
+  .glass-panel,
+  .glass-panel-elevated,
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .glass-panel {
+    background: rgba(18, 18, 18, 0.96) !important;
+  }
+
+  .glass-panel-elevated {
+    background: rgba(24, 24, 24, 0.98) !important;
   }
 }
 

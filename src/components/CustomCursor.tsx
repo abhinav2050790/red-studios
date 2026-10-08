@@ -9,8 +9,13 @@ export default function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Only enable on desktop with fine pointers
-    if (window.matchMedia("(pointer: coarse)").matches) return;
+    // Only enable on desktop with fine pointers (strictly disabled on Android and iOS mobile devices)
+    const isMobileOrTouch =
+      window.innerWidth <= 768 ||
+      (window.innerWidth <= 1024 && window.matchMedia("(pointer: coarse)").matches) ||
+      window.matchMedia("(pointer: coarse)").matches ||
+      navigator.maxTouchPoints > 0;
+    if (isMobileOrTouch) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let mouseX = window.innerWidth / 2;

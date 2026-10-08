@@ -168,6 +168,7 @@ const maskCompositeFragShader = `
   uniform float uContentScale;
   uniform vec4 uBaseBgColor;
   uniform vec4 uRevealBgColor;
+  uniform float uIsMobile;
   varying vec2 vUv;
 
   vec2 getMappedUv(vec2 uv, float imageAspect, float planeAspect, float contentScale) {
@@ -213,17 +214,19 @@ const maskCompositeFragShader = `
       vec4 sampleBase = texture2D(uBaseTexture, clampedUv);
       baseColor = mix(uBaseBgColor, sampleBase, boxFade);
 
-      // High-clarity video sampling with edge-safe Laplacian unsharp mask
-      vec2 texel = vec2(1.0 / 1280.0, 1.0 / 720.0);
-      vec4 cCenter = texture2D(uRevealTexture, clampedUv);
-      vec4 cTop    = texture2D(uRevealTexture, clamp(clampedUv + vec2(0.0, texel.y), 0.001, 0.999));
-      vec4 cBottom = texture2D(uRevealTexture, clamp(clampedUv - vec2(0.0, texel.y), 0.001, 0.999));
-      vec4 cLeft   = texture2D(uRevealTexture, clamp(clampedUv - vec2(texel.x, 0.0), 0.001, 0.999));
-      vec4 cRight  = texture2D(uRevealTexture, clamp(clampedUv + vec2(texel.x, 0.0), 0.001, 0.999));
-      vec4 laplacian = 4.0 * cCenter - (cTop + cBottom + cLeft + cRight);
+      vec4 sharpVideo = texture2D(uRevealTexture, clampedUv);
+      if (uIsMobile < 0.5) {
+        // Desktop high-clarity video sampling with edge-safe Laplacian unsharp mask
+        vec2 texel = vec2(1.0 / 1280.0, 1.0 / 720.0);
+        vec4 cTop    = texture2D(uRevealTexture, clamp(clampedUv + vec2(0.0, texel.y), 0.001, 0.999));
+        vec4 cBottom = texture2D(uRevealTexture, clamp(clampedUv - vec2(0.0, texel.y), 0.001, 0.999));
+        vec4 cLeft   = texture2D(uRevealTexture, clamp(clampedUv - vec2(texel.x, 0.0), 0.001, 0.999));
+        vec4 cRight  = texture2D(uRevealTexture, clamp(clampedUv + vec2(texel.x, 0.0), 0.001, 0.999));
+        vec4 laplacian = 4.0 * sharpVideo - (cTop + cBottom + cLeft + cRight);
 
-      float sharpenStrength = 0.35 * smoothstep(0.02, 0.08, boxDist);
-      vec4 sharpVideo = clamp(cCenter + sharpenStrength * laplacian, 0.0, 1.0);
+        float sharpenStrength = 0.35 * smoothstep(0.02, 0.08, boxDist);
+        sharpVideo = clamp(sharpVideo + sharpenStrength * laplacian, 0.0, 1.0);
+      }
 
       sharpRevealColor = mix(uRevealBgColor, sharpVideo, boxFade);
     }
@@ -240,7 +243,6 @@ const maskCompositeFragShader = `
 export default function FluidHero() {
   const containerRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const videoDarkRef = useRef<HTMLVideoElement>(null);
   const videoCreamRef = useRef<HTMLVideoElement>(null);
 
   const [theme, setTheme] = useState<"dark" | "cream">("dark");
@@ -258,6 +260,7 @@ export default function FluidHero() {
     setTextures: (base: THREE.Texture, reveal: THREE.Texture) => void;
     setBaseBgColor: (r: number, g: number, b: number, a: number) => void;
     setRevealBgColor: (r: number, g: number, b: number, a: number) => void;
+    requestRender?: () => void;
   } | null>(null);
 
   const texDarkBaseRef = useRef<THREE.Texture | null>(null);
@@ -282,6 +285,7 @@ export default function FluidHero() {
       sim.setBaseBgColor(246 / 255, 245 / 255, 240 / 255, 1.0);
       sim.setRevealBgColor(238.25 / 255, 236.33 / 255, 227.14 / 255, 1.0);
     }
+    sim.requestRender?.();
   }, []);
 
   const toggleTheme = useCallback(() => {
@@ -302,27 +306,25 @@ export default function FluidHero() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const videoDark = videoDarkRef.current;
     const videoCream = videoCreamRef.current;
     const container = containerRef.current;
     if (!canvas || !videoCream || !container) return;
 
     const isMobileScreen = typeof window !== "undefined" && (
       window.innerWidth <= 768 ||
-      window.matchMedia("(pointer: coarse)").matches ||
-      "ontouchstart" in window
+      (window.innerWidth <= 1024 && window.matchMedia("(pointer: coarse)").matches)
     );
 
-    // Exact fluid parameters from noth.in, dynamically tuned for mobile 60-120fps efficiency while preserving max PC fidelity
+    // Exact fluid parameters dynamically tuned for mobile 60-120fps efficiency while preserving max PC fidelity
     const settings = {
       simResolution: isMobileScreen ? 128 : 256,
       dyeResolution: isMobileScreen ? 256 : 512,
       velocityDissipation: 0.962, // Gliding liquid momentum
-      dyeDissipation: 0.988,      // Velvety lingering dye trail
-      pressureIterations: isMobileScreen ? 10 : 20, // 10 iterations on mobile provides 60-120fps with zero visual loss on smaller screens
+      dyeDissipation: isMobileScreen ? 0.966 : 0.988, // Natural settling on mobile (~2s) without freezing
+      pressureIterations: isMobileScreen ? 6 : 20, // 6 Jacobi iterations on 128x128 grid cuts 70% mobile draw calls
       curlStrength: 0.0,          // Zero turbulent smoke curl (pure sleek water stream)
-      splatRadius: isMobileScreen ? 0.0003 : 0.00006, // Wider natural touch swath for finger drags
-      splatForce: isMobileScreen ? 4400 : 5900,
+      splatRadius: isMobileScreen ? 0.00035 : 0.00006, // Wider natural touch swath for finger drags
+      splatForce: isMobileScreen ? 4200 : 5900,
       revealSize: isMobileScreen ? 3.4 : 3.9,
       edgeSoftness: 0.5,          // Clean liquid threshold
       edgeWidth: 0.01,            // Razor-sharp surface tension meniscus
@@ -332,16 +334,17 @@ export default function FluidHero() {
     try {
       renderer = new THREE.WebGLRenderer({
         canvas,
-        antialias: !isMobileScreen,
-        alpha: true,
+        antialias: false,
+        alpha: false, // Opaque canvas removes compositor blending pass on mobile Safari/Chrome
         powerPreference: "high-performance",
+        preserveDrawingBuffer: false,
       });
     } catch {
       return;
     }
 
-    // Clamp DPR to 1.5 on mobile to save 50%+ fillrate while staying razor sharp on OLED/Retina
-    const maxDpr = isMobileScreen ? 1.5 : 2.0;
+    // Clamp DPR to 1.0 on mobile to cut 75%+ pixel fillrate while staying razor sharp on OLED/Retina
+    const maxDpr = isMobileScreen ? 1.0 : 2.0;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
     renderer.autoClear = false;
 
@@ -446,26 +449,27 @@ export default function FluidHero() {
       renderer.render(quadScene, quadCamera);
     };
 
-    const maxAniso = renderer.capabilities.getMaxAnisotropy();
+    const maxAniso = isMobileScreen ? 1 : renderer.capabilities.getMaxAnisotropy();
     const textureLoader = new THREE.TextureLoader();
 
     const texDarkBase = textureLoader.load("/base_dark_16_9.png");
-    texDarkBase.minFilter = THREE.LinearMipmapLinearFilter;
+    texDarkBase.minFilter = isMobileScreen ? THREE.LinearFilter : THREE.LinearMipmapLinearFilter;
     texDarkBase.magFilter = THREE.LinearFilter;
-    texDarkBase.generateMipmaps = true;
+    texDarkBase.generateMipmaps = !isMobileScreen;
     texDarkBase.anisotropy = maxAniso;
     texDarkBaseRef.current = texDarkBase;
 
     const texCreamBase = textureLoader.load("/base_cream_16_9.jpg");
-    texCreamBase.minFilter = THREE.LinearMipmapLinearFilter;
+    texCreamBase.minFilter = isMobileScreen ? THREE.LinearFilter : THREE.LinearMipmapLinearFilter;
     texCreamBase.magFilter = THREE.LinearFilter;
-    texCreamBase.generateMipmaps = true;
+    texCreamBase.generateMipmaps = !isMobileScreen;
     texCreamBase.anisotropy = maxAniso;
     texCreamBaseRef.current = texCreamBase;
 
     const texOffwhiteReveal = new THREE.VideoTexture(videoCream);
     texOffwhiteReveal.minFilter = THREE.LinearFilter;
     texOffwhiteReveal.magFilter = THREE.LinearFilter;
+    texOffwhiteReveal.generateMipmaps = false;
     texOffwhiteReveal.anisotropy = maxAniso;
     texRevealRef.current = texOffwhiteReveal;
 
@@ -484,6 +488,7 @@ export default function FluidHero() {
         uEdgeWidth: { value: settings.edgeWidth },
         uPlaneAspect: { value: 16 / 9 },
         uContentScale: { value: 0.58 },
+        uIsMobile: { value: isMobileScreen ? 1.0 : 0.0 },
         uBaseBgColor: {
           value:
             theme === "dark"
@@ -501,6 +506,161 @@ export default function FluidHero() {
     const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), maskMaterial);
     scene.add(screenMesh);
 
+    let planeAspect = window.innerWidth / window.innerHeight;
+    let animId = 0;
+    let activeSimFrames = 120;
+    let lastVideoUpdate = 0;
+    let isHeroInView = true;
+    let isLoopRunning = false;
+
+    const mouseSegments: { x0: number; y0: number; x1: number; y1: number }[] = [];
+    let prevMouse: { x: number; y: number } | null = null;
+    let hasPrevMouse = false;
+
+    const animate = () => {
+      if (!isHeroInView) {
+        isLoopRunning = false;
+        return;
+      }
+
+      // 1. Splat velocity & dye along smooth unbroken segment steps
+      if (mouseSegments.length > 0) {
+        activeSimFrames = isMobileScreen ? 140 : 180;
+        const maxSegs = isMobileScreen ? 4 : 16;
+        const segs = mouseSegments.splice(-maxSegs);
+        mouseSegments.length = 0;
+
+        const maxSteps = isMobileScreen ? 2 : 6;
+        const stepDiv = isMobileScreen ? 0.018 : 0.008;
+
+        for (let i = 0; i < segs.length; i++) {
+          const seg = segs[i];
+          const dx = seg.x1 - seg.x0;
+          const dy = seg.y1 - seg.y0;
+          const dist = Math.hypot(dx, dy);
+          const steps = Math.min(maxSteps, Math.max(1, Math.ceil(dist / stepDiv)));
+
+          for (let step = 1; step <= steps; step++) {
+            const t = step / steps;
+            const px = seg.x0 + dx * t;
+            const py = seg.y0 + dy * t;
+
+            // Velocity splat: imparts physical momentum along drag vector
+            splatMat.uniforms.uTarget.value = velocity.read.texture;
+            splatMat.uniforms.uAspectRatio.value = planeAspect;
+            (splatMat.uniforms.uPoint.value as THREE.Vector2).set(px, py);
+            (splatMat.uniforms.uColor.value as THREE.Vector3).set(dx * settings.splatForce, dy * settings.splatForce, 0);
+            splatMat.uniforms.uRadius.value = settings.splatRadius;
+            renderPass(splatMat, velocity.write);
+            velocity.swap();
+
+            // Dye splat: injects white reveal dye
+            splatMat.uniforms.uTarget.value = dye.read.texture;
+            (splatMat.uniforms.uColor.value as THREE.Vector3).set(1.0, 1.0, 1.0);
+            splatMat.uniforms.uRadius.value = settings.splatRadius;
+            renderPass(splatMat, dye.write);
+            dye.swap();
+          }
+        }
+      }
+
+      if (activeSimFrames > 0) {
+        activeSimFrames--;
+
+        // 2. Vorticity / Curl (skip when curlStrength is 0.0 to save 2 FBO render passes)
+        if (settings.curlStrength > 0.0) {
+          curlMat.uniforms.uVelocity.value = velocity.read.texture;
+          renderPass(curlMat, curlRT);
+
+          vorticityMat.uniforms.uVelocity.value = velocity.read.texture;
+          vorticityMat.uniforms.uCurl.value = curlRT.texture;
+          vorticityMat.uniforms.uCurlStrength.value = settings.curlStrength;
+          vorticityMat.uniforms.uDt.value = 0.016;
+          renderPass(vorticityMat, velocity.write);
+          velocity.swap();
+        }
+
+        // 3. Advection (Velocity) with uDt = 1.0 for forward liquid momentum
+        advectionMat.uniforms.uVelocity.value = velocity.read.texture;
+        advectionMat.uniforms.uSource.value = velocity.read.texture;
+        advectionMat.uniforms.uTexelSize.value = simTexelSize;
+        advectionMat.uniforms.uDt.value = 1.0;
+        advectionMat.uniforms.uDissipation.value = settings.velocityDissipation;
+        renderPass(advectionMat, velocity.write);
+        velocity.swap();
+
+        // 4. Advection (Dye) with uDt = 1.0 for forward liquid water throw
+        advectionMat.uniforms.uVelocity.value = velocity.read.texture;
+        advectionMat.uniforms.uSource.value = dye.read.texture;
+        advectionMat.uniforms.uTexelSize.value = dyeTexelSize;
+        advectionMat.uniforms.uDt.value = 1.0;
+        advectionMat.uniforms.uDissipation.value = settings.dyeDissipation;
+        renderPass(advectionMat, dye.write);
+        dye.swap();
+
+        // 5. Divergence
+        divergenceMat.uniforms.uVelocity.value = velocity.read.texture;
+        renderPass(divergenceMat, divergenceRT);
+
+        // 6. Pressure Jacobi Solver
+        renderer.setRenderTarget(pressure.read);
+        renderer.clear();
+        renderer.setRenderTarget(null);
+        pressureMat.uniforms.uDivergence.value = divergenceRT.texture;
+        for (let i = 0; i < settings.pressureIterations; i++) {
+          pressureMat.uniforms.uPressure.value = pressure.read.texture;
+          renderPass(pressureMat, pressure.write);
+          pressure.swap();
+        }
+
+        // 7. Gradient Subtraction
+        gradientSubMat.uniforms.uPressure.value = pressure.read.texture;
+        gradientSubMat.uniforms.uVelocity.value = velocity.read.texture;
+        renderPass(gradientSubMat, velocity.write);
+        velocity.swap();
+
+        // 8. Video texture frame update throttled for 30fps source on mobile
+        if (videoCream.readyState >= videoCream.HAVE_CURRENT_DATA) {
+          const now = performance.now();
+          if (!isMobileScreen || now - lastVideoUpdate >= 32) {
+            texOffwhiteReveal.needsUpdate = true;
+            lastVideoUpdate = now;
+          }
+        }
+
+        // 9. Composite Mask Shader Output to Canvas
+        maskMaterial.uniforms.uDye.value = dye.read.texture;
+        renderer.setRenderTarget(null);
+        renderer.clear();
+        renderer.render(scene, camera);
+
+        if (isHeroInView) {
+          animId = requestAnimationFrame(animate);
+        } else {
+          isLoopRunning = false;
+        }
+      } else {
+        // Simulation settled: render final resting frame then sleep RAF loop (0% GPU / battery idle)
+        maskMaterial.uniforms.uDye.value = dye.read.texture;
+        renderer.setRenderTarget(null);
+        renderer.clear();
+        renderer.render(scene, camera);
+        isLoopRunning = false;
+      }
+    };
+
+    const startLoop = () => {
+      if (!isLoopRunning && isHeroInView) {
+        isLoopRunning = true;
+        animId = requestAnimationFrame(animate);
+      }
+    };
+
+    const stopLoop = () => {
+      isLoopRunning = false;
+      cancelAnimationFrame(animId);
+    };
+
     simulationRef.current = {
       setTextures: (base: THREE.Texture, reveal: THREE.Texture) => {
         maskMaterial.uniforms.uBaseTexture.value = base;
@@ -512,9 +672,11 @@ export default function FluidHero() {
       setRevealBgColor: (r: number, g: number, b: number, a: number) => {
         (maskMaterial.uniforms.uRevealBgColor.value as THREE.Vector4).set(r, g, b, a);
       },
+      requestRender: () => {
+        activeSimFrames = Math.max(activeSimFrames, 15);
+        startLoop();
+      },
     };
-
-    let planeAspect = window.innerWidth / window.innerHeight;
 
     const resize = () => {
       const width = window.innerWidth;
@@ -527,13 +689,12 @@ export default function FluidHero() {
       const isSmallPhone = width <= 480;
       const isMobile = width <= 768;
       maskMaterial.uniforms.uContentScale.value = isSmallPhone ? 0.86 : isMobile ? 0.75 : 0.58;
+
+      activeSimFrames = Math.max(activeSimFrames, 10);
+      startLoop();
     };
     resize();
     window.addEventListener("resize", resize);
-
-    const mouseSegments: { x0: number; y0: number; x1: number; y1: number }[] = [];
-    let prevMouse: { x: number; y: number } | null = null;
-    let hasPrevMouse = false;
 
     const onMouseMoveNormalized = (normX: number, normY: number) => {
       const x = Math.max(0, Math.min(1, normX));
@@ -571,6 +732,7 @@ export default function FluidHero() {
       const normX = (e.clientX - rect.left) / rect.width;
       const normY = (e.clientY - rect.top) / rect.height;
       onMouseMoveNormalized(normX, normY);
+      startLoop();
     };
 
     const handleMouseLeave = () => {
@@ -584,9 +746,19 @@ export default function FluidHero() {
       if (e.touches.length > 0) {
         const t = e.touches[0];
         const rect = container.getBoundingClientRect();
+        if (t.clientY < rect.top || t.clientY > rect.bottom) return;
+
         const normX = (t.clientX - rect.left) / rect.width;
         const normY = (t.clientY - rect.top) / rect.height;
         onMouseMoveNormalized(normX, normY);
+        // Instant tactile fluid response on initial touch
+        mouseSegments.push({
+          x0: normX,
+          y0: 1.0 - normY,
+          x1: normX + 0.001,
+          y1: 1.0 - normY + 0.001,
+        });
+        startLoop();
       }
     };
 
@@ -594,9 +766,16 @@ export default function FluidHero() {
       if (e.touches.length > 0) {
         const t = e.touches[0];
         const rect = container.getBoundingClientRect();
+        if (t.clientY < rect.top || t.clientY > rect.bottom) {
+          hasPrevMouse = false;
+          prevMouse = null;
+          return;
+        }
+
         const normX = (t.clientX - rect.left) / rect.width;
         const normY = (t.clientY - rect.top) / rect.height;
         onMouseMoveNormalized(normX, normY);
+        startLoop();
       }
     };
 
@@ -612,150 +791,27 @@ export default function FluidHero() {
     window.addEventListener("touchend", handleTouchEnd);
 
     const playVideos = () => {
-      if (videoDark) videoDark.play().catch(() => {});
       if (videoCream) videoCream.play().catch(() => {});
     };
     playVideos();
     window.addEventListener("click", playVideos, { once: true });
     window.addEventListener("touchstart", playVideos, { once: true });
 
-    let animId: number;
-
-    const animate = () => {
-      // 1. Splat velocity & dye along smooth unbroken segment steps
-      if (mouseSegments.length > 0) {
-        const segs = mouseSegments.splice(-16);
-        mouseSegments.length = 0;
-
-        for (let i = 0; i < segs.length; i++) {
-          const seg = segs[i];
-          const dx = seg.x1 - seg.x0;
-          const dy = seg.y1 - seg.y0;
-          const dist = Math.hypot(dx, dy);
-          const steps = Math.min(6, Math.max(1, Math.ceil(dist / 0.008)));
-
-          for (let step = 1; step <= steps; step++) {
-            const t = step / steps;
-            const px = seg.x0 + dx * t;
-            const py = seg.y0 + dy * t;
-
-            // Velocity splat: imparts physical momentum along drag vector
-            splatMat.uniforms.uTarget.value = velocity.read.texture;
-            splatMat.uniforms.uAspectRatio.value = planeAspect;
-            (splatMat.uniforms.uPoint.value as THREE.Vector2).set(px, py);
-            (splatMat.uniforms.uColor.value as THREE.Vector3).set(dx * settings.splatForce, dy * settings.splatForce, 0);
-            splatMat.uniforms.uRadius.value = settings.splatRadius;
-            renderPass(splatMat, velocity.write);
-            velocity.swap();
-
-            // Dye splat: injects white reveal dye
-            splatMat.uniforms.uTarget.value = dye.read.texture;
-            (splatMat.uniforms.uColor.value as THREE.Vector3).set(1.0, 1.0, 1.0);
-            splatMat.uniforms.uRadius.value = settings.splatRadius;
-            renderPass(splatMat, dye.write);
-            dye.swap();
-          }
-        }
-      }
-
-      // 2. Vorticity / Curl
-      curlMat.uniforms.uVelocity.value = velocity.read.texture;
-      renderPass(curlMat, curlRT);
-
-      vorticityMat.uniforms.uVelocity.value = velocity.read.texture;
-      vorticityMat.uniforms.uCurl.value = curlRT.texture;
-      vorticityMat.uniforms.uCurlStrength.value = settings.curlStrength;
-      vorticityMat.uniforms.uDt.value = 0.016;
-      renderPass(vorticityMat, velocity.write);
-      velocity.swap();
-
-      // 3. Advection (Velocity) with uDt = 1.0 for forward liquid momentum
-      advectionMat.uniforms.uVelocity.value = velocity.read.texture;
-      advectionMat.uniforms.uSource.value = velocity.read.texture;
-      advectionMat.uniforms.uTexelSize.value = simTexelSize;
-      advectionMat.uniforms.uDt.value = 1.0;
-      advectionMat.uniforms.uDissipation.value = settings.velocityDissipation;
-      renderPass(advectionMat, velocity.write);
-      velocity.swap();
-
-      // 4. Advection (Dye) with uDt = 1.0 for forward liquid water throw
-      advectionMat.uniforms.uVelocity.value = velocity.read.texture;
-      advectionMat.uniforms.uSource.value = dye.read.texture;
-      advectionMat.uniforms.uTexelSize.value = dyeTexelSize;
-      advectionMat.uniforms.uDt.value = 1.0;
-      advectionMat.uniforms.uDissipation.value = settings.dyeDissipation;
-      renderPass(advectionMat, dye.write);
-      dye.swap();
-
-      // 5. Divergence
-      divergenceMat.uniforms.uVelocity.value = velocity.read.texture;
-      renderPass(divergenceMat, divergenceRT);
-
-      // 6. Pressure Jacobi Solver
-      renderer.setRenderTarget(pressure.read);
-      renderer.clear();
-      renderer.setRenderTarget(null);
-      pressureMat.uniforms.uDivergence.value = divergenceRT.texture;
-      for (let i = 0; i < settings.pressureIterations; i++) {
-        pressureMat.uniforms.uPressure.value = pressure.read.texture;
-        renderPass(pressureMat, pressure.write);
-        pressure.swap();
-      }
-
-      // 7. Gradient Subtraction
-      gradientSubMat.uniforms.uPressure.value = pressure.read.texture;
-      gradientSubMat.uniforms.uVelocity.value = velocity.read.texture;
-      renderPass(gradientSubMat, velocity.write);
-      velocity.swap();
-
-      // 8. Video texture frame update
-      if (videoCream.readyState >= videoCream.HAVE_CURRENT_DATA) {
-        texOffwhiteReveal.needsUpdate = true;
-      }
-
-      // 9. Composite Mask Shader Output to Canvas
-      maskMaterial.uniforms.uDye.value = dye.read.texture;
-
-      renderer.setRenderTarget(null);
-      renderer.clear();
-      renderer.render(scene, camera);
-
-      if (isHeroInView) {
-        animId = requestAnimationFrame(animate);
-      } else {
-        isLoopRunning = false;
-      }
-    };
-
-    let isHeroInView = true;
-    let isLoopRunning = true;
-
-    const startLoop = () => {
-      if (!isLoopRunning) {
-        isLoopRunning = true;
-        animId = requestAnimationFrame(animate);
-      }
-    };
-
-    const stopLoop = () => {
-      isLoopRunning = false;
-      cancelAnimationFrame(animId);
-    };
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         isHeroInView = entry.isIntersecting;
         if (isHeroInView) {
+          activeSimFrames = Math.max(activeSimFrames, 5);
           startLoop();
         } else {
           stopLoop();
         }
       },
-      { threshold: 0.02 }
+      { threshold: 0.01 }
     );
     observer.observe(container);
 
-    animId = requestAnimationFrame(animate);
+    startLoop();
 
     return () => {
       observer.disconnect();
@@ -776,7 +832,7 @@ export default function FluidHero() {
     <section
       ref={containerRef}
       id="intro"
-      className={`relative w-full h-screen min-h-screen overflow-hidden select-none transition-colors duration-500 ${
+      className={`relative w-full h-[100dvh] min-h-[100dvh] overflow-hidden select-none transition-colors duration-500 ${
         isCream ? "bg-[#f6f5f0] text-[#111111]" : "bg-[#000000] text-[#ffffff]"
       }`}
     >
@@ -790,25 +846,7 @@ export default function FluidHero() {
         }}
       />
 
-      {/* Offscreen Video Elements for WebGL VideoTexture */}
-      <video
-        ref={videoDarkRef}
-        src="/video_dark.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        crossOrigin="anonymous"
-        style={{
-          position: "fixed",
-          top: "-9999px",
-          left: "-9999px",
-          width: "1px",
-          height: "1px",
-          opacity: 0,
-          pointerEvents: "none",
-        }}
-      />
+      {/* Offscreen Video Element for WebGL VideoTexture */}
       <video
         ref={videoCreamRef}
         src="/video.mp4"

@@ -11,10 +11,16 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion) return;
 
-    // On mobile touch devices, allow 100% native hardware momentum scrolling (60-120Hz ProMotion)
-    const isTouchDevice = window.matchMedia("(pointer: coarse)").matches || "ontouchstart" in window;
+    // On mobile touch devices (Android & iOS), allow 100% native hardware momentum scrolling (60-120Hz ProMotion / AMOLED)
+    const isTouchDevice =
+      typeof window !== "undefined" &&
+      (window.innerWidth <= 768 ||
+        (window.innerWidth <= 1024 && window.matchMedia("(pointer: coarse)").matches) ||
+        "ontouchstart" in window ||
+        navigator.maxTouchPoints > 0);
+
     if (isTouchDevice) {
-      // Native touch scrolling provides the smoothest zero-latency experience on mobile
+      // Native touch scrolling provides zero-latency, buttery smooth 120fps hardware scrolling on mobile phones
       return;
     }
 

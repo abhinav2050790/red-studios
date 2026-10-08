@@ -195,7 +195,7 @@ export default function InspoEditorialShowcase() {
               initial={{ opacity: 0, x: 60 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -60 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center"
             >
               {/* Left Column: Full Editorial Portrait */}
@@ -206,6 +206,7 @@ export default function InspoEditorialShowcase() {
                     alt="Red Studios Editorial Model"
                     fill
                     className="object-cover grayscale contrast-125"
+                    sizes="(max-width: 768px) 90vw, 450px"
                     priority
                   />
                 </div>
@@ -314,7 +315,7 @@ export default function InspoEditorialShowcase() {
               initial={{ opacity: 0, x: 60 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -60 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center"
             >
               {/* Left Column: Heading + Copy + Photo */}
@@ -335,6 +336,7 @@ export default function InspoEditorialShowcase() {
                     alt="Week in Production"
                     fill
                     className="object-cover grayscale contrast-125"
+                    sizes="(max-width: 768px) 90vw, 400px"
                   />
                 </div>
               </div>
@@ -375,6 +377,7 @@ export default function InspoEditorialShowcase() {
                     alt="Editorial model with straw"
                     fill
                     className="object-cover grayscale contrast-125"
+                    sizes="(max-width: 768px) 60vw, 250px"
                   />
                 </div>
               </div>
@@ -416,7 +419,7 @@ export default function InspoEditorialShowcase() {
               initial={{ opacity: 0, x: 60 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -60 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-7xl relative flex flex-col justify-between min-h-[580px]"
             >
               {/* Center Background Pink Orb */}
@@ -461,6 +464,7 @@ export default function InspoEditorialShowcase() {
                       alt="Unleash Creative Sensuality"
                       fill
                       className="object-cover grayscale contrast-125"
+                      sizes="(max-width: 768px) 75vw, 300px"
                     />
                   </div>
                 </div>
@@ -510,7 +514,7 @@ export default function InspoEditorialShowcase() {
               initial={{ opacity: 0, x: 60 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -60 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center"
             >
               {/* Left Column: Vertical Photo Beside Vintage Car */}
@@ -524,6 +528,7 @@ export default function InspoEditorialShowcase() {
                     alt="Be Your Own Muse"
                     fill
                     className="object-cover grayscale contrast-125"
+                    sizes="(max-width: 768px) 90vw, 450px"
                   />
                 </div>
               </div>
@@ -622,7 +627,7 @@ export default function InspoEditorialShowcase() {
               initial={{ opacity: 0, x: 60 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -60 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center"
             >
               {/* Left Column: Frosted Glass Photo + Vertical DON'T HIDE YOURSELF */}
@@ -634,6 +639,7 @@ export default function InspoEditorialShowcase() {
                     alt="Don't hide yourself"
                     fill
                     className="object-cover grayscale contrast-125"
+                    sizes="(max-width: 768px) 80vw, 380px"
                   />
                 </div>
 
@@ -709,7 +715,7 @@ export default function InspoEditorialShowcase() {
               initial={{ opacity: 0, x: 60 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -60 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-7xl relative flex flex-col justify-between min-h-[520px]"
             >
               {/* Top Lookbook Title with Extended Rule */}
@@ -732,6 +738,7 @@ export default function InspoEditorialShowcase() {
                       alt="Lookbook 01"
                       fill
                       className="object-cover grayscale contrast-125"
+                      sizes="(max-width: 768px) 70vw, 280px"
                     />
                   </div>
                 </div>
@@ -744,6 +751,7 @@ export default function InspoEditorialShowcase() {
                       alt="Lookbook Horizontal"
                       fill
                       className="object-cover grayscale contrast-125"
+                      sizes="(max-width: 768px) 90vw, 550px"
                     />
                   </div>
                 </div>
@@ -801,7 +809,7 @@ export default function InspoEditorialShowcase() {
               initial={{ opacity: 0, x: 60 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -60 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-7xl rounded-3xl bg-gradient-to-br from-[#FFE4E9] via-[#FFF0F3] to-[#FFE6D9] p-8 sm:p-16 lg:p-20 relative overflow-hidden border border-pink-200/50 shadow-lg min-h-[520px] flex flex-col justify-between"
             >
               {/* Top Bar with REWIND Button */}
