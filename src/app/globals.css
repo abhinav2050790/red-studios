@@ -1,0 +1,175 @@
+@import "tailwindcss";
+
+:root {
+  --font-serif: 'Playfair Display', 'Cormorant Garamond', Didot, 'Bodoni MT', Georgia, serif;
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Space Mono', Consolas, Monaco, monospace;
+  --canvas: #0a0a0a;
+  --canvas-light: #ffffff;
+  --pastel-pink: #ffd1dc;
+  --pastel-blush: #ffe4e9;
+  --pastel-peach: #ffe6d9;
+  --panel: #141414;
+  --panel-elevated: #1a1a1a;
+  --accent-red: #e10600;
+  --accent-red-hover: #ff1e19;
+  --accent-glow: rgba(225, 6, 0, 0.35);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.18);
+  --text-primary: #f5f2ee;
+  --text-secondary: #8e8e93;
+  --text-muted: #5c5c60;
+  --glass-bg: rgba(20, 20, 20, 0.72);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  background-color: var(--canvas);
+  color: var(--text-primary);
+  scroll-behavior: smooth;
+  font-family: var(--font-body, system-ui, -apple-system, sans-serif);
+}
+
+body {
+  background-color: var(--canvas);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+::-webkit-scrollbar-thumb {
+  background: #262626;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #e10600;
+}
+
+/* Lenis Recommended CSS */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* Glassmorphism & Panel Utilities */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+}
+
+.glass-panel-elevated {
+  background: rgba(26, 26, 26, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-hover);
+}
+
+/* Button & Accent Hover Glows */
+.btn-primary {
+  background-color: var(--accent-red);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 9999px;
+  padding: 0.85rem 1.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 24px rgba(225, 6, 0, 0.25);
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-red-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(225, 6, 0, 0.45);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font-weight: 500;
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  padding: 0.85rem 1.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+}
+
+/* Typography styles */
+.font-display {
+  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+}
+
+.font-mono-code {
+  font-family: var(--font-mono, 'Space Mono', monospace);
+}
+
+.font-serif {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+}
+
+.font-editorial-italic {
+  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  font-style: italic;
+}
+
+/* Accessibility: Prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Hide default cursor on desktop with pointer: fine for custom physics cursor */
+@media (pointer: fine) {
+  html, body, a, button, input, textarea, select, .interactive-target {
+    cursor: none !important;
+  }
+}
