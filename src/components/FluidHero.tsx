@@ -344,15 +344,15 @@ export default function FluidHero() {
     const settings = {
       simResolution: isMobileScreen ? 128 : 256,
       dyeResolution: isMobileScreen ? 256 : 512,
-      velocityDissipation: 0.962, // Exact noth.in
-      dyeDissipation: isMobileScreen ? 0.968 : 0.988, // Exact noth.in
-      pressureIterations: isMobileScreen ? 8 : 20, // Exact noth.in
+      velocityDissipation: 0.962,
+      dyeDissipation: isMobileScreen ? 0.988 : 0.992,
+      pressureIterations: isMobileScreen ? 8 : 20,
       curlStrength: 0.0,
-      splatRadius: isMobileScreen ? 0.00012 : 0.00006, // Exact noth.in 6e-5!
-      splatForce: 5900, // Exact noth.in 5900!
-      revealSize: 3.9,  // Exact noth.in 3.9!
-      edgeSoftness: 0.5, // Exact noth.in 0.5!
-      edgeWidth: 0.01,  // Exact noth.in 0.01!
+      splatRadius: isMobileScreen ? 0.00012 : 0.00006,
+      splatForce: 5900,
+      revealSize: 3.9,
+      edgeSoftness: 0.5,
+      edgeWidth: 0.01,
     };
 
     let renderer: THREE.WebGLRenderer;
@@ -567,7 +567,7 @@ export default function FluidHero() {
         const dist = Math.hypot(u, f);
 
         if (dist > 0.0001 && scrollS > 0.001) {
-          activeSimFrames = isMobileScreen ? 180 : 220;
+          activeSimFrames = isMobileScreen ? 280 : 360;
 
           // Velocity splat: imparts physical hydrodynamic momentum along drag vector
           splatMat.uniforms.uTarget.value = velocity.read.texture;
