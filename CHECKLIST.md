@@ -65,6 +65,8 @@ Use this checklist prior to flipping DNS and launching `redstudios.com` live.
 ---
 
 ## 🚀 7. Hosting & Domain Deployment
+- [x] Deployed live to Vercel: [https://red-studios-4ez4.vercel.app/](https://red-studios-4ez4.vercel.app/)
+- [x] Connected to GitHub CI/CD: [https://github.com/abhinav2050790/red-studios](https://github.com/abhinav2050790/red-studios) (every `main` branch push auto-deploys)
 - [ ] Connect custom apex domain `redstudios.com` and `www.redstudios.com` to Vercel.
 - [ ] Configure automatic HTTPS SSL certificate.
 - [ ] Enable Vercel Web Analytics and Speed Insights (optional).
