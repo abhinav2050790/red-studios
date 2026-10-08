@@ -348,9 +348,9 @@ export default function FluidHero() {
       dyeDissipation: isMobileScreen ? 0.988 : 0.992,
       pressureIterations: isMobileScreen ? 8 : 20,
       curlStrength: 0.0,
-      splatRadius: isMobileScreen ? 0.00012 : 0.00006,
+      splatRadius: isMobileScreen ? 0.00018 : 0.00010,
       splatForce: 5900,
-      revealSize: 3.9,
+      revealSize: 4.6,
       edgeSoftness: 0.5,
       edgeWidth: 0.01,
     };
