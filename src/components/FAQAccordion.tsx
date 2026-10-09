@@ -42,7 +42,7 @@ export default function FAQAccordion() {
                   type="button"
                   onClick={() => toggleItem(idx)}
                   aria-expanded={isOpen}
-                  className="flex w-full items-center justify-between p-5 sm:p-9 text-left transition-colors cursor-pointer"
+                  className="touch-press flex w-full items-center justify-between p-5 sm:p-9 text-left transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3 sm:gap-6">
                     <span className="font-mono text-xs sm:text-sm font-bold text-black/40">

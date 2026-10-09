@@ -39,27 +39,32 @@ export default function WorkLightbox({ project, onClose }: WorkLightboxProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-8"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 lg:p-8"
         >
           {/* Backdrop with blur */}
           <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+            className="absolute inset-0 bg-black/75 backdrop-blur-md"
             onClick={onClose}
           />
 
-          {/* Modal Container */}
+          {/* Modal Container: Native Bottom Sheet on Mobile, Centered Card on Desktop */}
           <motion.div
-            initial={{ scale: 0.95, y: 20, opacity: 0 }}
+            initial={{ scale: 0.96, y: 40, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.95, y: 20, opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative z-10 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl border border-black/10 bg-white text-black shadow-2xl"
+            exit={{ scale: 0.96, y: 40, opacity: 0 }}
+            transition={{ type: "spring", damping: 26, stiffness: 320 }}
+            className="relative z-10 max-h-[92dvh] w-full max-w-4xl overflow-y-auto rounded-t-3xl sm:rounded-3xl border-t sm:border border-black/10 bg-white text-black shadow-2xl pb-safe"
           >
+            {/* Mobile Drag Indicator Bar */}
+            <div className="sm:hidden flex justify-center py-2.5">
+              <div className="w-12 h-1 bg-black/20 rounded-full" />
+            </div>
+
             {/* Close Button */}
             <button
               onClick={onClose}
               aria-label="Close project modal"
-              className="absolute right-3.5 top-3.5 sm:right-5 sm:top-5 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/95 text-black shadow-md transition-colors hover:bg-black hover:text-white cursor-pointer active:scale-95"
+              className="touch-press absolute right-3.5 top-3.5 sm:right-5 sm:top-5 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/95 text-black shadow-md transition-colors hover:bg-black hover:text-white cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>

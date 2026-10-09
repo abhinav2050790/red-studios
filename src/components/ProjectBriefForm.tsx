@@ -229,9 +229,10 @@ export default function ProjectBriefForm() {
                       </label>
                       <input
                         type="text"
+                        autoComplete="name"
                         placeholder="Elena Rostova"
                         {...register("fullName")}
-                        className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                        className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-base sm:text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                       />
                       {errors.fullName && (
                         <p className="mt-1 text-xs text-red-600">
@@ -247,9 +248,11 @@ export default function ProjectBriefForm() {
                       </label>
                       <input
                         type="email"
+                        inputMode="email"
+                        autoComplete="email"
                         placeholder="elena@company.com"
                         {...register("email")}
-                        className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                        className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-base sm:text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                       />
                       {errors.email && (
                         <p className="mt-1 text-xs text-red-600">
@@ -267,9 +270,10 @@ export default function ProjectBriefForm() {
                       </label>
                       <input
                         type="text"
+                        autoComplete="organization"
                         placeholder="Velocity Performance"
                         {...register("companyName")}
-                        className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                        className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-base sm:text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                       />
                       {errors.companyName && (
                         <p className="mt-1 text-xs text-red-600">
@@ -285,9 +289,11 @@ export default function ProjectBriefForm() {
                       </label>
                       <input
                         type="tel"
+                        inputMode="tel"
+                        autoComplete="tel"
                         placeholder="+1 (555) 000-0000"
                         {...register("phone")}
-                        className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                        className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-base sm:text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                       />
                     </div>
                   </div>
@@ -298,10 +304,11 @@ export default function ProjectBriefForm() {
                       Existing Website or Instagram URL (Optional)
                     </label>
                     <input
-                      type="text"
+                      type="url"
+                      inputMode="url"
                       placeholder="https://velocitybrand.com or @velocity"
                       {...register("websiteOrSocial")}
-                      className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                      className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-base sm:text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                     />
                   </div>
                 </motion.div>
@@ -329,7 +336,7 @@ export default function ProjectBriefForm() {
                             type="button"
                             key={srv}
                             onClick={() => toggleService(srv)}
-                            className={`rounded-full border px-5 py-2.5 font-mono text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                            className={`touch-press rounded-full border px-5 py-2.5 font-mono text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                               isSelected
                                 ? "border-black bg-black text-white shadow-sm"
                                 : "border-black/15 bg-white text-black/70 hover:border-black hover:text-black"
@@ -356,7 +363,7 @@ export default function ProjectBriefForm() {
                       rows={4}
                       placeholder="Tell us what you are launching, what kind of imagery or digital experience you require..."
                       {...register("projectDescription")}
-                      className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                      className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-base sm:text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                     />
                     {errors.projectDescription && (
                       <p className="mt-1 text-xs text-red-600">
@@ -375,7 +382,7 @@ export default function ProjectBriefForm() {
                         type="text"
                         placeholder="e.g. 5 hero product films, 20 stills, 1 landing page"
                         {...register("deliverablesCount")}
-                        className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none"
+                        className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-base sm:text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none"
                       />
                     </div>
 
@@ -385,10 +392,11 @@ export default function ProjectBriefForm() {
                         Inspiration / Reference URLs (Optional)
                       </label>
                       <input
-                        type="text"
+                        type="url"
+                        inputMode="url"
                         placeholder="Links to Vimeo, Pinterest, reference sites"
                         {...register("referenceLinks")}
-                        className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none"
+                        className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-base sm:text-sm text-black placeholder-black/30 transition-all focus:border-black focus:outline-none"
                       />
                     </div>
                   </div>
@@ -417,7 +425,7 @@ export default function ProjectBriefForm() {
                             type="button"
                             key={b}
                             onClick={() => setValue("budgetRange", b, { shouldValidate: true })}
-                            className={`rounded-2xl border px-4 py-3 text-center font-mono text-xs transition-all cursor-pointer ${
+                            className={`touch-press rounded-2xl border px-4 py-3 text-center font-mono text-xs transition-all cursor-pointer ${
                               isSelected
                                 ? "border-black bg-black text-white shadow-sm"
                                 : "border-black/15 bg-white text-black/70 hover:border-black hover:text-black"
@@ -448,7 +456,7 @@ export default function ProjectBriefForm() {
                             type="button"
                             key={t}
                             onClick={() => setValue("timeline", t, { shouldValidate: true })}
-                            className={`rounded-2xl border px-4 py-3 text-left font-mono text-xs transition-all cursor-pointer ${
+                            className={`touch-press rounded-2xl border px-4 py-3 text-left font-mono text-xs transition-all cursor-pointer ${
                               isSelected
                                 ? "border-black bg-black text-white shadow-sm"
                                 : "border-black/15 bg-white text-black/70 hover:border-black hover:text-black"
@@ -473,7 +481,7 @@ export default function ProjectBriefForm() {
                     </label>
                     <select
                       {...register("heardAboutUs")}
-                      className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-sm text-black focus:border-black focus:outline-none"
+                      className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3.5 font-sans text-base sm:text-sm text-black focus:border-black focus:outline-none"
                     >
                       <option value="">Select source...</option>
                       {HEARD_ABOUT_OPTIONS.map((source) => (
@@ -490,7 +498,7 @@ export default function ProjectBriefForm() {
                       <input
                         type="checkbox"
                         {...register("consentAgreed")}
-                        className="mt-1 h-4 w-4 rounded border-black/20 text-black focus:ring-black"
+                        className="mt-1 h-5 w-5 rounded border-black/20 text-black focus:ring-black shrink-0"
                       />
                       <span className="text-xs leading-relaxed text-black/70">
                         I agree to share this project brief with Red Studios for the purpose of receiving an architectural quote and timeline proposal. We respect your confidentiality.
@@ -505,13 +513,13 @@ export default function ProjectBriefForm() {
                 </motion.div>
               )}
 
-              {/* Wizard Navigation Footer */}
-              <div className="mt-12 flex items-center justify-between border-t border-black/10 pt-8">
+              {/* Wizard Navigation Footer (With Dock-Safe Padding on Mobile) */}
+              <div className="mt-12 flex items-center justify-between border-t border-black/10 pt-8 pb-14 md:pb-0">
                 {currentStep > 1 ? (
                   <button
                     type="button"
                     onClick={() => setCurrentStep((prev) => (prev - 1) as 1 | 2)}
-                    className="inline-flex items-center gap-2 rounded-full border border-black/20 bg-white px-6 py-3 font-mono text-xs uppercase tracking-wider text-black transition-colors hover:border-black cursor-pointer"
+                    className="touch-press inline-flex items-center gap-2 rounded-full border border-black/20 bg-white px-6 py-3 font-mono text-xs uppercase tracking-wider text-black transition-colors hover:border-black cursor-pointer"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />
                     <span>Previous</span>
@@ -524,7 +532,7 @@ export default function ProjectBriefForm() {
                   <button
                     type="button"
                     onClick={handleNextStep}
-                    className="inline-flex items-center gap-2 rounded-full bg-black px-8 py-3.5 font-mono text-xs font-semibold uppercase tracking-wider text-white transition-all hover:bg-black/85 cursor-pointer"
+                    className="touch-press inline-flex items-center gap-2 rounded-full bg-black px-8 py-3.5 font-mono text-xs font-semibold uppercase tracking-wider text-white transition-all hover:bg-black/85 cursor-pointer shadow-md"
                   >
                     <span>Continue</span>
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -533,7 +541,7 @@ export default function ProjectBriefForm() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="inline-flex items-center gap-2 rounded-full bg-black px-9 py-3.5 font-mono text-xs font-semibold uppercase tracking-wider text-white shadow-md transition-all hover:bg-black/85 disabled:opacity-50 cursor-pointer"
+                    className="touch-press inline-flex items-center gap-2 rounded-full bg-black px-9 py-3.5 font-mono text-xs font-semibold uppercase tracking-wider text-white shadow-lg transition-all hover:bg-black/85 disabled:opacity-50 cursor-pointer"
                   >
                     {isSubmitting ? (
                       <>

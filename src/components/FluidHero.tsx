@@ -820,11 +820,28 @@ export default function FluidHero() {
     window.addEventListener("touchend", handleTouchEnd);
 
     const playVideos = () => {
-      if (videoCream) videoCream.play().catch(() => {});
+      if (videoCream) {
+        const promise = videoCream.play();
+        if (promise !== undefined) {
+          promise.catch(() => {
+            // Autoplay blocked: will unlock on user touch/click
+          });
+        }
+      }
     };
     playVideos();
     window.addEventListener("click", playVideos, { once: true });
     window.addEventListener("touchstart", playVideos, { once: true });
+
+    // iOS Safari & Android: Resume video loop when app returns from background
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        playVideos();
+        activeSimFrames = Math.max(activeSimFrames, 15);
+        startLoop();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -857,6 +874,7 @@ export default function FluidHero() {
       window.removeEventListener("touchend", handleTouchEnd);
       window.removeEventListener("click", playVideos);
       window.removeEventListener("touchstart", playVideos);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
 
       velocity.read.dispose();
       velocity.write.dispose();
@@ -936,46 +954,46 @@ export default function FluidHero() {
         }}
       >
         {/* Top Header */}
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 sm:gap-4 pointer-events-auto w-full">
+        <header className="flex flex-row justify-between items-center gap-2 pointer-events-auto w-full pt-12 sm:pt-0">
           <div
-            className="font-['Space_Grotesk',sans-serif] text-[11px] sm:text-[0.95rem] leading-[1.35] tracking-tight font-medium"
+            className="font-['Space_Grotesk',sans-serif] text-[10px] sm:text-[0.95rem] leading-[1.3] tracking-tight font-medium max-w-[62%] sm:max-w-none"
             style={{ color: isCream ? "#666666" : "#888888" }}
           >
             Not a style, a perspective.<br />
-            <span className="font-semibold text-xs sm:text-base" style={{ color: isCream ? "#111111" : "#ffffff" }}>
+            <span className="font-semibold text-[11px] sm:text-base" style={{ color: isCream ? "#111111" : "#ffffff" }}>
               Because Red Studios is Everythin&apos;.
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4 self-start sm:self-auto">
+          <div className="flex items-center gap-2 shrink-0">
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="interactive-target flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-semibold backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 whitespace-nowrap"
+              className="touch-press interactive-target flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-semibold backdrop-blur-md transition-all whitespace-nowrap"
               style={{
-                background: isCream ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)",
-                border: isCream ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.12)",
+                background: isCream ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)",
+                border: isCream ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.15)",
                 color: isCream ? "#111111" : "#ffffff",
               }}
               title="Toggle between Dark Obsidian & Studio Cream"
             >
               <span className="w-2 h-2 rounded-full bg-[#ff3333] shadow-[0_0_8px_#ff3333] shrink-0" />
-              <span>Theme: {isCream ? "Studio Cream" : "Dark Obsidian"}</span>
+              <span>{isCream ? "Dark" : "Cream"}</span>
             </button>
 
-            {/* Availability Status Badge */}
+            {/* Availability Status Badge (Desktop) */}
             <div
-              className="hidden md:flex items-center gap-2 text-xs font-semibold uppercase tracking-wider whitespace-nowrap"
+              className="hidden lg:flex items-center gap-2 text-xs font-semibold uppercase tracking-wider whitespace-nowrap"
               style={{ color: isCream ? "#666666" : "#888888" }}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] shadow-[0_0_8px_#22c55e] animate-pulse shrink-0" />
               Available Q4/2026
             </div>
 
-            {/* Book a Call CTA */}
+            {/* Book a Call CTA (Desktop) */}
             <a
               href="#call"
-              className="interactive-target px-3 py-1.5 sm:px-5 sm:py-2 rounded-full text-[11px] sm:text-sm font-semibold backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95 whitespace-nowrap"
+              className="hidden sm:inline-flex interactive-target px-4 py-1.5 sm:px-5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold backdrop-blur-md transition-all hover:-translate-y-0.5 active:scale-95 whitespace-nowrap"
               style={{
                 background: isCream ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)",
                 border: isCream ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.12)",
@@ -988,10 +1006,10 @@ export default function FluidHero() {
         </header>
 
         {/* Center: Open Stage showcasing the Red Studios logo & fluid reveal */}
-        <div ref={stageRef} className="flex-1 w-full min-h-0 flex items-center justify-center pointer-events-none" />
+        <div ref={stageRef} className="flex-1 w-full min-h-0 flex items-center justify-center pointer-events-none my-auto" />
 
         {/* Bottom Instruction Tag & Scroll Down Pill */}
-        <div className="flex flex-col items-center gap-2 sm:gap-3 my-2 sm:my-4 pointer-events-auto max-w-[92vw] mx-auto">
+        <div className="flex flex-col items-center gap-1.5 sm:gap-3 my-2 sm:my-3 pointer-events-auto max-w-[92vw] mx-auto pb-14 md:pb-0">
           <div
             className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[9px] min-[380px]:text-[10px] sm:text-[11px] font-['Space_Grotesk',sans-serif] font-semibold tracking-wider uppercase backdrop-blur-md pointer-events-none text-center max-w-full"
             style={{
@@ -1000,14 +1018,15 @@ export default function FluidHero() {
               color: isCream ? "#666666" : "#888888",
             }}
           >
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ff3333] animate-ping shrink-0" />
             <span>
-              ● Navier-Stokes — {isTouch ? "Drag finger across logo" : "Move cursor across logo"}
+              {isTouch ? "Drag finger across logo to reveal" : "Move cursor across logo to reveal"}
             </span>
           </div>
 
           <a
             href="#editorial-showcase"
-            className="interactive-target inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-['Space_Grotesk',sans-serif] tracking-wider uppercase transition-all duration-200 hover:text-[#ff3333]"
+            className="touch-press interactive-target inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-['Space_Grotesk',sans-serif] tracking-wider uppercase transition-all duration-200 hover:text-[#ff3333]"
             style={{
               color: isCream ? "#777777" : "#aaaaaa",
             }}

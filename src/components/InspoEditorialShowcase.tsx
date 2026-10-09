@@ -51,7 +51,8 @@ export default function InspoEditorialShowcase() {
     if (e.changedTouches.length === 1) {
       const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
       const deltaY = e.changedTouches[0].clientY - touchStartYRef.current;
-      if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
+      // Responsive thumb swipe gesture: triggered when horizontal movement exceeds 32px
+      if (Math.abs(deltaX) > 32 && Math.abs(deltaX) > Math.abs(deltaY) * 1.1) {
         if (deltaX < 0) {
           nextSlide();
         } else {
@@ -85,8 +86,8 @@ export default function InspoEditorialShowcase() {
 
   return (
     <section id="editorial-showcase" className="relative w-full bg-[#FFFFFF] text-[#0A0A0A] overflow-hidden select-none">
-      {/* Top Sticky Header Styled exactly as inspo.mp4 */}
-      <header className="sticky top-0 z-40 w-full bg-[#FFFFFF]/90 backdrop-blur-md border-b border-black/[0.06] px-6 sm:px-12 py-5 flex items-center justify-between">
+      {/* Top Header Styled as inspo.mp4 (Static on mobile to prevent viewport clipping, sticky on desktop) */}
+      <header className="relative sm:sticky top-0 z-30 w-full bg-[#FFFFFF]/95 backdrop-blur-md border-b border-black/[0.06] px-4 sm:px-12 py-4 sm:py-5 flex items-center justify-between">
         {/* Left: Minimalist Key Glyph Logo */}
         <div className="flex items-center gap-3">
           <button
@@ -847,11 +848,13 @@ export default function InspoEditorialShowcase() {
                   <form onSubmit={handleSubscribe} className="flex items-center gap-3">
                     <input
                       type="email"
+                      inputMode="email"
+                      autoComplete="email"
                       value={emailInput}
                       onChange={(e) => setEmailInput(e.target.value)}
                       placeholder="insert your email..."
                       required
-                      className="flex-1 px-5 py-3.5 rounded-xl bg-white border border-black/10 text-black text-xs font-sans placeholder-black/40 focus:outline-none focus:ring-1 focus:ring-black"
+                      className="flex-1 px-5 py-3.5 rounded-xl bg-white border border-black/10 text-black text-base sm:text-xs font-sans placeholder-black/40 focus:outline-none focus:ring-1 focus:ring-black"
                     />
                     <button
                       type="submit"

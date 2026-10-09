@@ -43,15 +43,15 @@ export default function SelectedWork() {
             </p>
           </div>
 
-          {/* Filter Tabs */}
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 rounded-2xl sm:rounded-full border border-black/10 bg-[#FAF9F7] p-1.5 max-w-full">
+          {/* Filter Tabs (Horizontal touch scrollable on mobile, flex-wrap on desktop) */}
+          <div className="flex items-center gap-1.5 sm:gap-2 rounded-2xl sm:rounded-full border border-black/10 bg-[#FAF9F7] p-1.5 overflow-x-auto no-scrollbar touch-snap-x max-w-full">
             {filterTabs.map((tab) => {
               const isActive = activeFilter === tab.key;
               return (
                 <button
                   key={tab.key}
                   onClick={() => setActiveFilter(tab.key)}
-                  className={`relative rounded-full px-3.5 py-2 sm:px-5 sm:py-2.5 font-mono text-[11px] sm:text-xs font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                  className={`touch-press relative shrink-0 rounded-full px-3.5 py-2 sm:px-5 sm:py-2.5 font-mono text-[11px] sm:text-xs font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                     isActive
                       ? "text-white"
                       : "text-black/60 hover:text-black"

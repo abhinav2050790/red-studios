@@ -64,17 +64,17 @@ export default function BookCallSection() {
                 href={gmailComposeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex h-14 w-full items-center justify-center gap-3 rounded-full bg-black px-9 font-sans text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all duration-300 hover:bg-black/85 hover:scale-[1.02] sm:w-auto cursor-pointer"
+                className="touch-press group flex h-14 w-full items-center justify-center gap-3 rounded-full bg-black px-9 font-sans text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all duration-300 hover:bg-black/85 sm:w-auto cursor-pointer"
               >
                 <Mail className="h-4 w-4 transition-transform group-hover:scale-110" />
                 <span>Launch Discovery Call (Gmail)</span>
                 <ExternalLink className="h-3.5 w-3.5 opacity-70 group-hover:opacity-100" />
               </a>
 
-              {/* Fallback Mailto */}
+              {/* Fallback Mailto (Direct Native Mobile Mail on iOS / Android) */}
               <a
                 href={mailtoUrl}
-                className="flex h-14 w-full items-center justify-center gap-2 rounded-full border border-black/15 bg-white px-7 font-sans text-xs font-semibold uppercase tracking-wider text-black shadow-xs transition-all duration-200 hover:bg-black hover:text-white sm:w-auto cursor-pointer"
+                className="touch-press flex h-14 w-full items-center justify-center gap-2 rounded-full border border-black/15 bg-white px-7 font-sans text-xs font-semibold uppercase tracking-wider text-black shadow-xs transition-all duration-200 hover:bg-black hover:text-white sm:w-auto cursor-pointer"
               >
                 <span>Or Open Default Mail Client</span>
               </a>
@@ -85,7 +85,7 @@ export default function BookCallSection() {
               <span className="font-mono text-xs text-black/50">Studio Dispatch:</span>
               <button
                 onClick={handleCopyEmail}
-                className="group flex items-center gap-2 rounded-lg border border-black/10 bg-white/70 px-3.5 py-1.5 font-mono text-xs text-black/80 transition-colors hover:border-black cursor-pointer"
+                className="touch-press group flex items-center gap-2 rounded-lg border border-black/10 bg-white/70 px-3.5 py-1.5 font-mono text-xs text-black/80 transition-colors hover:border-black cursor-pointer"
               >
                 <span>{toEmail}</span>
                 {copied ? (
