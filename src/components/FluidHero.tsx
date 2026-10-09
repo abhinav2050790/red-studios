@@ -1026,7 +1026,11 @@ export default function FluidHero() {
 
           <a
             href="#editorial-showcase"
-            className="touch-press interactive-target inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-['Space_Grotesk',sans-serif] tracking-wider uppercase transition-all duration-200 hover:text-[#ff3333]"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById("editorial-showcase")?.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="touch-press interactive-target inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-['Space_Grotesk',sans-serif] tracking-wider uppercase transition-all duration-200 hover:text-[#ff3333] cursor-pointer"
             style={{
               color: isCream ? "#777777" : "#aaaaaa",
             }}

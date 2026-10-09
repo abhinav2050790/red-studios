@@ -20,10 +20,18 @@ import { NAV_LINKS, STUDIO_CONFIG } from "@/content/studio";
 export default function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isInShowcase, setIsInShowcase] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 80);
+      const scrollY = window.scrollY;
+      setIsScrolled(scrollY > 80);
+
+      const showcase = document.getElementById("editorial-showcase");
+      if (showcase) {
+        const rect = showcase.getBoundingClientRect();
+        setIsInShowcase(rect.top <= 80 && rect.bottom >= 120);
+      }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -53,7 +61,7 @@ export default function Navigation() {
       {/* ============================================================ */}
       <header
         className={`hidden md:block fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled
+          isScrolled && !isInShowcase
             ? "translate-y-0 opacity-100 bg-[#0A0A0A]/85 backdrop-blur-md border-b border-white/[0.08] py-3.5"
             : "-translate-y-full opacity-0 pointer-events-none py-3.5"
         }`}
@@ -107,7 +115,11 @@ export default function Navigation() {
       {/* ============================================================ */}
       {/* 2. MOBILE TOP STATUS HEADER (Lightweight & Safe-Area Aware)   */}
       {/* ============================================================ */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-40 px-4 pt-safe pointer-events-none">
+      <header
+        className={`md:hidden fixed top-0 left-0 right-0 z-40 px-4 pt-safe pointer-events-none transition-all duration-300 ${
+          isInShowcase ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
+        }`}
+      >
         <div className="pt-2 pb-2 flex items-center justify-between pointer-events-auto">
           {/* Studio Brand Pill */}
           <Link
@@ -133,7 +145,9 @@ export default function Navigation() {
       {/* ============================================================ */}
       <nav
         aria-label="Mobile Quick Navigation"
-        className="md:hidden fixed bottom-4 inset-x-3 sm:inset-x-6 z-40 max-w-md mx-auto pointer-events-auto"
+        className={`md:hidden fixed bottom-4 inset-x-3 sm:inset-x-6 z-40 max-w-md mx-auto pointer-events-auto transition-all duration-300 ${
+          isInShowcase ? "translate-y-24 opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
+        }`}
         style={{
           paddingBottom: "max(0.25rem, env(safe-area-inset-bottom, 0px))",
         }}
