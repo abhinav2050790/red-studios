@@ -664,7 +664,7 @@ export default function FluidHero({ isActive = true, onExplore }: FluidHeroProps
         renderer.clear();
         renderer.render(scene, camera);
 
-        if (isHeroInView) {
+        if (isHeroInView && isActiveRef.current) {
           animId = requestAnimationFrame(animate);
         } else {
           isLoopRunning = false;
@@ -981,7 +981,7 @@ export default function FluidHero({ isActive = true, onExplore }: FluidHeroProps
         }}
       >
         {/* Top Header */}
-        <header className="flex flex-row justify-between items-center gap-2 pointer-events-auto w-full pt-12 sm:pt-0">
+        <header className="flex flex-row justify-between items-center gap-2 pointer-events-auto w-full pt-1 sm:pt-0">
           <div
             className="font-['Space_Grotesk',sans-serif] text-[10px] sm:text-[0.95rem] leading-[1.3] tracking-tight font-medium max-w-[62%] sm:max-w-none"
             style={{ color: isCream ? "#666666" : "#888888" }}
@@ -1036,7 +1036,7 @@ export default function FluidHero({ isActive = true, onExplore }: FluidHeroProps
         <div ref={stageRef} className="flex-1 w-full min-h-0 flex items-center justify-center pointer-events-none my-auto" />
 
         {/* Bottom Instruction Tag & Scroll Down Pill */}
-        <div className="flex flex-col items-center gap-1.5 sm:gap-3 my-2 sm:my-3 pointer-events-auto max-w-[92vw] mx-auto pb-14 md:pb-0">
+        <div className="flex flex-col items-center gap-1.5 sm:gap-3 my-2 sm:my-3 pointer-events-auto max-w-[92vw] mx-auto pb-1 sm:pb-0">
           <div
             className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[9px] min-[380px]:text-[10px] sm:text-[11px] font-['Space_Grotesk',sans-serif] font-semibold tracking-wider uppercase backdrop-blur-md pointer-events-none text-center max-w-full"
             style={{
