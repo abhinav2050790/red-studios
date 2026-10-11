@@ -235,7 +235,12 @@ const maskCompositeFragShader = `
   }
 `;
 
-export default function FluidHero() {
+interface FluidHeroProps {
+  isActive?: boolean;
+  onExplore?: () => void;
+}
+
+export default function FluidHero({ isActive = true, onExplore }: FluidHeroProps) {
   const containerRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoCreamRef = useRef<HTMLVideoElement>(null);
@@ -243,6 +248,7 @@ export default function FluidHero() {
 
   const [theme, setTheme] = useState<"dark" | "cream">("dark");
   const [isTouch, setIsTouch] = useState(false);
+  const isActiveRef = useRef(isActive);
 
   useEffect(() => {
     setIsTouch(
@@ -258,7 +264,20 @@ export default function FluidHero() {
     setRevealBgColor: (r: number, g: number, b: number, a: number) => void;
     setIsDark: (val: number) => void;
     requestRender?: () => void;
+    stopLoop?: () => void;
+    startLoop?: () => void;
   } | null>(null);
+
+  useEffect(() => {
+    isActiveRef.current = isActive;
+    if (!isActive) {
+      simulationRef.current?.stopLoop?.();
+      videoCreamRef.current?.pause();
+    } else {
+      videoCreamRef.current?.play().catch(() => {});
+      simulationRef.current?.startLoop?.();
+    }
+  }, [isActive]);
 
   const texDarkBaseRef = useRef<THREE.Texture | null>(null);
   const texCreamBaseRef = useRef<THREE.Texture | null>(null);
@@ -520,7 +539,7 @@ export default function FluidHero() {
     let hasInitialMouse = false;
 
     const animate = () => {
-      if (!isHeroInView) {
+      if (!isHeroInView || !isActiveRef.current) {
         isLoopRunning = false;
         return;
       }
@@ -699,6 +718,13 @@ export default function FluidHero() {
         activeSimFrames = Math.max(activeSimFrames, 15);
         startLoop();
       },
+      stopLoop: () => {
+        stopLoop();
+      },
+      startLoop: () => {
+        activeSimFrames = Math.max(activeSimFrames, 15);
+        startLoop();
+      },
     };
 
     const resize = () => {
@@ -757,6 +783,7 @@ export default function FluidHero() {
     window.addEventListener("orientationchange", resize);
 
     const handleMouseMove = (e: MouseEvent) => {
+      if (!isActiveRef.current) return;
       const rect = container.getBoundingClientRect();
       const nx = (e.clientX - rect.left) / rect.width;
       const ny = 1.0 - (e.clientY - rect.top) / rect.height;
@@ -781,7 +808,7 @@ export default function FluidHero() {
     };
 
     const handleTouchStart = (e: TouchEvent) => {
-      if (!e.touches.length) return;
+      if (!isActiveRef.current || !e.touches.length) return;
       const t = e.touches[0];
       const rect = container.getBoundingClientRect();
       const nx = (t.clientX - rect.left) / rect.width;
@@ -796,7 +823,7 @@ export default function FluidHero() {
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!e.touches.length) return;
+      if (!isActiveRef.current || !e.touches.length) return;
       const t = e.touches[0];
       const rect = container.getBoundingClientRect();
       const nx = (t.clientX - rect.left) / rect.width;
@@ -1024,11 +1051,11 @@ export default function FluidHero() {
             </span>
           </div>
 
-          <a
-            href="#capture-experience"
+          <button
+            type="button"
             onClick={(e) => {
               e.preventDefault();
-              document.getElementById("capture-experience")?.scrollIntoView({ behavior: "smooth" });
+              onExplore?.();
             }}
             className="touch-press interactive-target inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-['Space_Grotesk',sans-serif] tracking-wider uppercase transition-all duration-200 hover:text-[#ff3333] cursor-pointer"
             style={{
@@ -1037,7 +1064,7 @@ export default function FluidHero() {
           >
             <span>Scroll to Explore</span>
             <span className="animate-bounce text-[#ff3333] font-bold">↓</span>
-          </a>
+          </button>
         </div>
 
         {/* Footer */}

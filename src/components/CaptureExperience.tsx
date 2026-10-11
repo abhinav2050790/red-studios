@@ -1,136 +1,32 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
-export default function CaptureExperience() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const isAnimatingRef = useRef(false);
-  const currentSlideRef = useRef(0);
+interface CaptureExperienceProps {
+  currentSlide: number; // 0: Home, 1: About Us, 2: Products, 3: FAQs/Join
+  onNavigate: (index: number) => void;
+  onGoToIntro?: () => void;
+}
+
+export default function CaptureExperience({
+  currentSlide,
+  onNavigate,
+  onGoToIntro,
+}: CaptureExperienceProps) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Keep ref in sync for event listeners
   useEffect(() => {
-    currentSlideRef.current = currentSlide;
-  }, [currentSlide]);
-
-  // Precise calibrated slide navigation with transition lock
-  const goToSlide = useCallback((nextIndex: number) => {
-    if (nextIndex === currentSlideRef.current) return;
-    const clamped = Math.max(0, Math.min(3, nextIndex));
-    isAnimatingRef.current = true;
-    setCurrentSlide(clamped);
-
-    // Lock duration matches buttery animation easing (850ms)
-    setTimeout(() => {
-      isAnimatingRef.current = false;
-    }, 850);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
-  // One-scroll calibrated gesture controller
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    let touchStartY = 0;
-
-    const handleWheel = (e: WheelEvent) => {
-      // Filter out micro-jitters
-      if (Math.abs(e.deltaY) < 16) return;
-
-      // Check if container is in viewport
-      const rect = container.getBoundingClientRect();
-      const inView = rect.top <= 100 && rect.bottom >= window.innerHeight - 100;
-      if (!inView) return;
-
-      if (isAnimatingRef.current) {
-        e.preventDefault();
-        return;
-      }
-
-      if (e.deltaY > 0) {
-        // Scrolling DOWN
-        if (currentSlideRef.current < 3) {
-          e.preventDefault();
-          goToSlide(currentSlideRef.current + 1);
-        }
-      } else {
-        // Scrolling UP
-        if (currentSlideRef.current > 0) {
-          e.preventDefault();
-          goToSlide(currentSlideRef.current - 1);
-        } else {
-          // At slide 0, allow natural scroll up to Red Studios hero
-          const heroEl = document.getElementById("hero");
-          if (heroEl && rect.top >= -20) {
-            // let standard scroll handle it
-          }
-        }
-      }
-    };
-
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartY = e.touches[0].clientY;
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      const rect = container.getBoundingClientRect();
-      const inView = rect.top <= 50 && rect.bottom >= window.innerHeight - 50;
-      if (inView && isAnimatingRef.current) {
-        e.preventDefault();
-      }
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      const deltaY = touchStartY - e.changedTouches[0].clientY;
-      if (Math.abs(deltaY) < 35) return;
-
-      const rect = container.getBoundingClientRect();
-      const inView = rect.top <= 50 && rect.bottom >= window.innerHeight - 50;
-      if (!inView || isAnimatingRef.current) return;
-
-      if (deltaY > 0 && currentSlideRef.current < 3) {
-        goToSlide(currentSlideRef.current + 1);
-      } else if (deltaY < 0 && currentSlideRef.current > 0) {
-        goToSlide(currentSlideRef.current - 1);
-      }
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const rect = container.getBoundingClientRect();
-      const inView = rect.top <= 100 && rect.bottom >= window.innerHeight - 100;
-      if (!inView || isAnimatingRef.current) return;
-
-      if (e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ") {
-        if (currentSlideRef.current < 3) {
-          e.preventDefault();
-          goToSlide(currentSlideRef.current + 1);
-        }
-      } else if (e.key === "ArrowUp" || e.key === "PageUp") {
-        if (currentSlideRef.current > 0) {
-          e.preventDefault();
-          goToSlide(currentSlideRef.current - 1);
-        }
-      }
-    };
-
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchmove", handleTouchMove, { passive: false });
-    window.addEventListener("touchend", handleTouchEnd, { passive: true });
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("wheel", handleWheel);
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchmove", handleTouchMove);
-      window.removeEventListener("touchend", handleTouchEnd);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [goToSlide]);
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,21 +37,26 @@ export default function CaptureExperience() {
     }
   };
 
-  // Smooth transitions config
-  const transition = { duration: 0.85, ease: [0.16, 1, 0.3, 1] as const };
+  // Smooth buttery transition matching video
+  const transition = { duration: 0.75, ease: [0.16, 1, 0.3, 1] as const };
 
   return (
     <div
-      ref={containerRef}
       id="capture-experience"
-      className="relative w-full h-screen overflow-hidden bg-[#FFFFFF] text-black font-sans selection:bg-black selection:text-white"
+      className="relative w-full h-full overflow-hidden bg-[#FFFFFF] text-black font-sans selection:bg-black selection:text-white"
     >
       {/* =======================================================================
           TOP NAVIGATION BAR (PERSISTENT & REACTIVE)
           ======================================================================= */}
       <header className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between pt-6 sm:pt-8 px-6 sm:px-12 pointer-events-auto">
         <button
-          onClick={() => goToSlide(0)}
+          onClick={() => {
+            if (onGoToIntro) {
+              onGoToIntro();
+            } else {
+              onNavigate(0);
+            }
+          }}
           className="font-syne font-extrabold text-xl sm:text-2xl tracking-tight transition-colors cursor-pointer select-none"
           style={{ color: currentSlide === 1 || currentSlide === 3 ? "#FFFFFF" : "#000000" }}
         >
@@ -165,7 +66,7 @@ export default function CaptureExperience() {
         {/* Center Pill Menu with Active Indicator */}
         <nav className="hidden sm:flex items-center gap-1 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-[#111111] text-white rounded-full text-xs shadow-md border border-white/10">
           <button
-            onClick={() => goToSlide(0)}
+            onClick={() => onNavigate(0)}
             className={`px-3 py-1 rounded transition-all cursor-pointer ${
               currentSlide === 0
                 ? "border border-white/60 text-white font-medium bg-white/10"
@@ -175,7 +76,7 @@ export default function CaptureExperience() {
             Home
           </button>
           <button
-            onClick={() => goToSlide(1)}
+            onClick={() => onNavigate(1)}
             className={`px-3 py-1 rounded transition-all cursor-pointer ${
               currentSlide === 1
                 ? "border border-white/60 text-white font-medium bg-white/10"
@@ -185,7 +86,7 @@ export default function CaptureExperience() {
             About Us
           </button>
           <button
-            onClick={() => goToSlide(2)}
+            onClick={() => onNavigate(2)}
             className={`px-3 py-1 rounded transition-all cursor-pointer ${
               currentSlide === 2
                 ? "border border-white/60 text-white font-medium bg-white/10"
@@ -195,7 +96,7 @@ export default function CaptureExperience() {
             Products
           </button>
           <button
-            onClick={() => goToSlide(3)}
+            onClick={() => onNavigate(3)}
             className={`px-3 py-1 rounded transition-all cursor-pointer ${
               currentSlide === 3
                 ? "border border-white/60 text-white font-medium bg-white/10"
@@ -264,7 +165,7 @@ export default function CaptureExperience() {
         <div className="relative z-20 w-full flex flex-col sm:flex-row items-center sm:items-end justify-between gap-6 pb-2 px-2 sm:px-4 pointer-events-auto">
           <div className="flex flex-col items-start gap-4 max-w-[310px]">
             <motion.button
-              onClick={() => goToSlide(1)}
+              onClick={() => onNavigate(1)}
               className="px-6 py-2.5 sm:px-7 sm:py-3 bg-black text-white text-[12px] sm:text-xs font-medium rounded-full -rotate-12 hover:-rotate-6 hover:scale-105 transition-transform duration-300 shadow-md cursor-pointer select-none"
               whileTap={{ scale: 0.95 }}
             >
@@ -276,7 +177,7 @@ export default function CaptureExperience() {
           </div>
 
           <button
-            onClick={() => goToSlide(1)}
+            onClick={() => onNavigate(1)}
             className="group flex flex-col items-center gap-0.5 font-script text-2xl sm:text-3xl text-black hover:opacity-75 transition-opacity cursor-pointer select-none py-1"
           >
             <span className="flex items-center gap-1.5">
@@ -344,7 +245,7 @@ export default function CaptureExperience() {
               The Capture Engine delivers true 16–bit color and dynamic range, authentically capturing light from deepest shadows to brightest peaks.
             </p>
             <motion.button
-              onClick={() => goToSlide(2)}
+              onClick={() => onNavigate(2)}
               className="mt-4 px-7 py-3 bg-white text-black text-xs font-semibold rounded-full -rotate-15 hover:-rotate-6 hover:scale-105 transition-transform duration-300 shadow-[0_12px_24px_rgba(255,255,255,0.18)] cursor-pointer select-none"
               whileTap={{ scale: 0.95 }}
             >
@@ -367,7 +268,7 @@ export default function CaptureExperience() {
         {/* Bottom White Scroll Down */}
         <div className="relative z-20 w-full flex justify-center pb-2 pointer-events-auto">
           <button
-            onClick={() => goToSlide(2)}
+            onClick={() => onNavigate(2)}
             className="group flex flex-col items-center gap-0.5 font-script text-2xl sm:text-3xl text-white hover:opacity-75 transition-opacity cursor-pointer select-none py-1"
           >
             <span className="flex items-center gap-1.5">
@@ -420,7 +321,7 @@ export default function CaptureExperience() {
               Intuitive controls and revolutionary EVF ensure effortless handling. Focus purely on the scene for exceptional results. Download the guide.
             </p>
             <motion.button
-              onClick={() => goToSlide(3)}
+              onClick={() => onNavigate(3)}
               className="px-7 py-3 bg-black text-white text-xs font-semibold rounded-full -rotate-12 hover:-rotate-6 hover:scale-105 transition-transform duration-300 shadow-[0_12px_24px_rgba(0,0,0,0.22)] cursor-pointer select-none"
               whileTap={{ scale: 0.95 }}
             >
@@ -431,7 +332,7 @@ export default function CaptureExperience() {
 
         <div className="relative z-20 w-full flex justify-center pb-2 pointer-events-auto">
           <button
-            onClick={() => goToSlide(3)}
+            onClick={() => onNavigate(3)}
             className="group flex flex-col items-center gap-0.5 font-script text-2xl sm:text-3xl text-black hover:opacity-75 transition-opacity cursor-pointer select-none py-1"
           >
             <span className="flex items-center gap-1.5">
@@ -446,17 +347,17 @@ export default function CaptureExperience() {
         {/* 1. Palms (Top-Left) */}
         <motion.div
           animate={{
-            x: currentSlide === 2 ? -210 : 0,
-            y: currentSlide === 2 ? -140 : 0,
+            x: currentSlide === 2 ? (isMobile ? -95 : -210) : 0,
+            y: currentSlide === 2 ? (isMobile ? -85 : -140) : 0,
             scale: currentSlide === 2 ? 1 : 0.2,
             opacity: currentSlide === 2 ? 1 : 0,
             rotate: currentSlide === 2 ? -10 : 0,
           }}
           transition={transition}
-          className="absolute p-2 sm:p-2.5 pb-6 sm:pb-8 bg-white shadow-[0_20px_35px_rgba(0,0,0,0.18)] rounded-[2px] pointer-events-auto cursor-pointer"
+          className="absolute p-1.5 sm:p-2.5 pb-5 sm:pb-8 bg-white shadow-[0_20px_35px_rgba(0,0,0,0.18)] rounded-[2px] pointer-events-auto cursor-pointer will-change-transform"
           whileHover={{ scale: 1.1, rotate: -5, zIndex: 60 }}
         >
-          <div className="relative w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 overflow-hidden bg-slate-100">
+          <div className="relative w-24 h-24 sm:w-36 sm:h-36 md:w-40 md:h-40 overflow-hidden bg-slate-100">
             <Image src="/polaroid_palms_hd.jpg" alt="Tropical Palms" fill className="object-cover" sizes="160px" />
           </div>
         </motion.div>
@@ -464,17 +365,17 @@ export default function CaptureExperience() {
         {/* 2. Venice (Bottom-Left) */}
         <motion.div
           animate={{
-            x: currentSlide === 2 ? -210 : 0,
-            y: currentSlide === 2 ? 150 : 0,
+            x: currentSlide === 2 ? (isMobile ? -95 : -210) : 0,
+            y: currentSlide === 2 ? (isMobile ? 95 : 150) : 0,
             scale: currentSlide === 2 ? 1 : 0.2,
             opacity: currentSlide === 2 ? 1 : 0,
             rotate: currentSlide === 2 ? 9 : 0,
           }}
           transition={transition}
-          className="absolute p-2 sm:p-2.5 pb-6 sm:pb-8 bg-white shadow-[0_20px_35px_rgba(0,0,0,0.18)] rounded-[2px] pointer-events-auto cursor-pointer"
+          className="absolute p-1.5 sm:p-2.5 pb-5 sm:pb-8 bg-white shadow-[0_20px_35px_rgba(0,0,0,0.18)] rounded-[2px] pointer-events-auto cursor-pointer will-change-transform"
           whileHover={{ scale: 1.1, rotate: 4, zIndex: 60 }}
         >
-          <div className="relative w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 overflow-hidden bg-slate-100">
+          <div className="relative w-24 h-24 sm:w-36 sm:h-36 md:w-40 md:h-40 overflow-hidden bg-slate-100">
             <Image src="/polaroid_venice_hd.jpg" alt="Venice Canal" fill className="object-cover" sizes="160px" />
           </div>
         </motion.div>
@@ -482,17 +383,17 @@ export default function CaptureExperience() {
         {/* 3. Forest (Top-Right) */}
         <motion.div
           animate={{
-            x: currentSlide === 2 ? 210 : 0,
-            y: currentSlide === 2 ? -130 : 0,
+            x: currentSlide === 2 ? (isMobile ? 95 : 210) : 0,
+            y: currentSlide === 2 ? (isMobile ? -85 : -130) : 0,
             scale: currentSlide === 2 ? 1 : 0.2,
             opacity: currentSlide === 2 ? 1 : 0,
             rotate: currentSlide === 2 ? 7 : 0,
           }}
           transition={transition}
-          className="absolute p-2 sm:p-2.5 pb-6 sm:pb-8 bg-white shadow-[0_20px_35px_rgba(0,0,0,0.18)] rounded-[2px] pointer-events-auto cursor-pointer"
+          className="absolute p-1.5 sm:p-2.5 pb-5 sm:pb-8 bg-white shadow-[0_20px_35px_rgba(0,0,0,0.18)] rounded-[2px] pointer-events-auto cursor-pointer will-change-transform"
           whileHover={{ scale: 1.1, rotate: 2, zIndex: 60 }}
         >
-          <div className="relative w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 overflow-hidden bg-slate-100">
+          <div className="relative w-24 h-24 sm:w-36 sm:h-36 md:w-40 md:h-40 overflow-hidden bg-slate-100">
             <Image src="/polaroid_forest_hd.jpg" alt="Forest Canopy" fill className="object-cover" sizes="160px" />
           </div>
         </motion.div>
@@ -500,17 +401,17 @@ export default function CaptureExperience() {
         {/* 4. Stars (Bottom-Right) */}
         <motion.div
           animate={{
-            x: currentSlide === 2 ? 230 : 0,
-            y: currentSlide === 2 ? 160 : 0,
+            x: currentSlide === 2 ? (isMobile ? 100 : 230) : 0,
+            y: currentSlide === 2 ? (isMobile ? 100 : 160) : 0,
             scale: currentSlide === 2 ? 1 : 0.2,
             opacity: currentSlide === 2 ? 1 : 0,
             rotate: currentSlide === 2 ? 15 : 0,
           }}
           transition={transition}
-          className="absolute p-2.5 sm:p-3 pb-7 sm:pb-9 bg-white shadow-[0_20px_35px_rgba(0,0,0,0.18)] rounded-[2px] pointer-events-auto cursor-pointer"
+          className="absolute p-2 sm:p-3 pb-6 sm:pb-9 bg-white shadow-[0_20px_35px_rgba(0,0,0,0.18)] rounded-[2px] pointer-events-auto cursor-pointer will-change-transform"
           whileHover={{ scale: 1.1, rotate: 8, zIndex: 60 }}
         >
-          <div className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 overflow-hidden bg-slate-100">
+          <div className="relative w-26 h-26 sm:w-40 sm:h-40 md:w-44 md:h-44 overflow-hidden bg-slate-100">
             <Image src="/polaroid_stars_hd.jpg" alt="Starry Sky" fill className="object-cover" sizes="180px" />
           </div>
         </motion.div>
@@ -521,13 +422,15 @@ export default function CaptureExperience() {
           ======================================================================= */}
       <motion.div
         animate={{
-          rotate: currentSlide === 0 ? 0 : currentSlide === 1 ? 14 : currentSlide === 2 ? -16 : 0,
+          x: "-50%",
           y: currentSlide === 3 ? "-140%" : "-50%",
+          rotate: currentSlide === 0 ? 0 : currentSlide === 1 ? 14 : currentSlide === 2 ? -16 : 0,
           opacity: currentSlide === 3 ? 0 : 1,
           scale: currentSlide === 0 ? 1 : currentSlide === 1 ? 0.98 : currentSlide === 2 ? 1.02 : 0.9,
         }}
+        initial={{ x: "-50%", y: "-50%", rotate: 0 }}
         transition={transition}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 z-40 w-[64vw] sm:w-[48vw] md:w-[40vw] max-w-[560px] min-w-[280px] pointer-events-auto cursor-pointer select-none"
+        className="absolute top-1/2 left-1/2 z-40 w-[64vw] sm:w-[48vw] md:w-[40vw] max-w-[560px] min-w-[280px] pointer-events-auto cursor-pointer select-none will-change-transform"
         whileHover={{ scale: 1.03 }}
       >
         <div className="relative w-full aspect-[880/626] filter drop-shadow-[0_32px_44px_rgba(0,0,0,0.3)]">
@@ -536,7 +439,7 @@ export default function CaptureExperience() {
             alt="Fujifilm Instax mini Evo"
             fill
             priority
-            className="object-contain"
+            className="object-contain select-none pointer-events-none"
             sizes="(max-width: 768px) 75vw, 42vw"
           />
           <div className="absolute top-[8%] right-[11%] w-[13%] h-[15%] rounded-[6px] bg-white/75 blur-[5px] pointer-events-none animate-pulse" />
@@ -631,16 +534,16 @@ export default function CaptureExperience() {
           {/* Navigation & Social Link Columns */}
           <div className="w-full md:w-auto flex flex-row md:flex-col justify-between md:justify-start gap-10 sm:gap-14 text-xs sm:text-sm z-20">
             <nav className="flex flex-col gap-2.5 text-[#b0b0b0]">
-              <button onClick={() => goToSlide(0)} className="text-left hover:text-white transition-colors cursor-pointer">
+              <button onClick={() => onNavigate(0)} className="text-left hover:text-white transition-colors cursor-pointer">
                 Home
               </button>
-              <button onClick={() => goToSlide(1)} className="text-left hover:text-white transition-colors cursor-pointer">
+              <button onClick={() => onNavigate(1)} className="text-left hover:text-white transition-colors cursor-pointer">
                 About Us
               </button>
-              <button onClick={() => goToSlide(2)} className="text-left hover:text-white transition-colors cursor-pointer">
+              <button onClick={() => onNavigate(2)} className="text-left hover:text-white transition-colors cursor-pointer">
                 Products
               </button>
-              <button onClick={() => goToSlide(3)} className="text-left hover:text-white transition-colors cursor-pointer">
+              <button onClick={() => onNavigate(3)} className="text-left hover:text-white transition-colors cursor-pointer">
                 FAQs
               </button>
             </nav>
@@ -668,7 +571,7 @@ export default function CaptureExperience() {
         {/* Bottom Giant Watermark & "Scroll Up ↑" */}
         <div className="relative z-10 w-full flex flex-col items-center justify-end select-none pt-8 pointer-events-auto">
           <button
-            onClick={() => goToSlide(0)}
+            onClick={() => onNavigate(0)}
             className="group flex flex-col items-center gap-0.5 font-script text-2xl sm:text-3xl text-white hover:opacity-75 transition-opacity cursor-pointer select-none mb-4 z-20"
           >
             <span className="flex items-center gap-1.5">
