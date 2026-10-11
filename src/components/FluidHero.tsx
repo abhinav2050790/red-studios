@@ -1025,10 +1025,10 @@ export default function FluidHero() {
           </div>
 
           <a
-            href="#editorial-showcase"
+            href="#capture-experience"
             onClick={(e) => {
               e.preventDefault();
-              document.getElementById("editorial-showcase")?.scrollIntoView({ behavior: "smooth" });
+              document.getElementById("capture-experience")?.scrollIntoView({ behavior: "smooth" });
             }}
             className="touch-press interactive-target inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-['Space_Grotesk',sans-serif] tracking-wider uppercase transition-all duration-200 hover:text-[#ff3333] cursor-pointer"
             style={{

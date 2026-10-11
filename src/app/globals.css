@@ -5,6 +5,8 @@
   --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'Space Mono', Consolas, Monaco, monospace;
+  --font-syne: 'Syne', sans-serif;
+  --font-script: 'Italianno', 'Pinyon Script', cursive;
   --canvas: #0a0a0a;
   --canvas-light: #ffffff;
   --pastel-pink: #ffd1dc;
@@ -241,6 +243,14 @@ html.lenis body {
 
 .font-serif {
   font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+}
+
+.font-syne {
+  font-family: var(--font-syne, 'Syne', sans-serif);
+}
+
+.font-script {
+  font-family: var(--font-script, 'Italianno', 'Pinyon Script', cursive);
 }
 
 .font-editorial-italic {
