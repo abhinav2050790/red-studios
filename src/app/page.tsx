@@ -9,9 +9,8 @@ export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const currentSlideRef = useRef(0);
   const isAnimatingRef = useRef(false);
-  const lastWheelTimeRef = useRef(0);
 
-  // Sync ref
+  // Sync ref with state
   useEffect(() => {
     currentSlideRef.current = currentSlide;
   }, [currentSlide]);
@@ -25,10 +24,10 @@ export default function Home() {
     setCurrentSlide(clamped);
     currentSlideRef.current = clamped;
 
-    // Lock duration matches buttery animation easing (750ms)
+    // Smooth transition lock duration (700ms)
     setTimeout(() => {
       isAnimatingRef.current = false;
-    }, 750);
+    }, 700);
   }, []);
 
   // One-scroll calibrated gesture controller
@@ -40,28 +39,18 @@ export default function Home() {
     let touchStartX = 0;
 
     const handleWheel = (e: WheelEvent) => {
+      // Prevent native page scroll
       e.preventDefault();
 
-      const now = performance.now();
-      const timeSinceLastWheel = now - lastWheelTimeRef.current;
-      lastWheelTimeRef.current = now;
-
-      // 1. If currently animating, discard event
+      // If currently animating between slides, lock out until animation completes
       if (isAnimatingRef.current) {
         return;
       }
 
-      // 2. Trailing inertia / trackpad momentum rejection:
-      // If wheel events have been arriving continuously (within 220ms),
-      // it is residual inertia from the same swipe flick. Ignore it!
-      if (timeSinceLastWheel < 220) {
-        return;
-      }
+      // Filter out micro-movements
+      if (Math.abs(e.deltaY) < 12) return;
 
-      // 3. Minimum threshold to reject micro tremors
-      if (Math.abs(e.deltaY) < 18) return;
-
-      // 4. Exactly one slide per gesture
+      // Exactly one slide per gesture
       if (e.deltaY > 0) {
         if (currentSlideRef.current < 4) {
           goToSlide(currentSlideRef.current + 1);
@@ -81,7 +70,6 @@ export default function Home() {
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      // Prevent browser pull-to-refresh and bounce
       if (e.cancelable) {
         e.preventDefault();
       }
@@ -93,7 +81,7 @@ export default function Home() {
       const deltaX = touchStartX - e.changedTouches[0].clientX;
 
       // Ensure vertical swipe gesture
-      if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 35) {
+      if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 30) {
         if (deltaY > 0 && currentSlideRef.current < 4) {
           goToSlide(currentSlideRef.current + 1);
         } else if (deltaY < 0 && currentSlideRef.current > 0) {
@@ -105,7 +93,6 @@ export default function Home() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isAnimatingRef.current) return;
 
-      // Do not intercept if typing in an input (e.g. newsletter)
       if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName)) {
         return;
       }
@@ -138,7 +125,7 @@ export default function Home() {
     };
   }, [goToSlide]);
 
-  const transition = { duration: 0.75, ease: [0.16, 1, 0.3, 1] as const };
+  const transition = { duration: 0.7, ease: [0.16, 1, 0.3, 1] as const };
 
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black text-white select-none">
