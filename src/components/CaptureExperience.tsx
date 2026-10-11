@@ -37,8 +37,8 @@ export default function CaptureExperience({
     }
   };
 
-  // Snappy spring-like easing for mobile and desktop 60-120fps fluency
-  const transition = { duration: 0.65, ease: [0.22, 1, 0.36, 1] as const };
+  // Feather-light quintic-deceleration easing calibrated for 120fps mobile displays
+  const transition = { duration: 0.52, ease: [0.22, 1, 0.32, 1] as const };
 
   return (
     <div
@@ -494,10 +494,11 @@ export default function CaptureExperience({
         }}
         initial={{ x: "-50%", y: "-50%", rotate: 0 }}
         transition={transition}
-        className="absolute top-1/2 left-1/2 z-40 w-[64vw] sm:w-[48vw] md:w-[40vw] max-w-[560px] min-w-[240px] pointer-events-auto cursor-pointer select-none will-change-transform"
+        className="absolute top-1/2 left-1/2 z-40 w-[64vw] sm:w-[48vw] md:w-[40vw] max-w-[560px] min-w-[240px] pointer-events-auto cursor-pointer select-none will-change-transform transform-gpu"
+        style={{ willChange: "transform, opacity" }}
         whileHover={{ scale: 1.03 }}
       >
-        <div className="relative w-full aspect-[880/626] filter drop-shadow-[0_32px_44px_rgba(0,0,0,0.3)]">
+        <div className="relative w-full aspect-[880/626] filter drop-shadow-[0_24px_36px_rgba(0,0,0,0.25)] transform-gpu">
           <Image
             src="/instax_camera.png"
             alt="Fujifilm Instax mini Evo"
@@ -536,7 +537,8 @@ export default function CaptureExperience({
               opacity: currentSlide === 3 ? 1 : 0,
             }}
             transition={transition}
-            className="relative w-20 min-[420px]:w-28 sm:w-64 md:w-80 aspect-[594/860] flex items-center justify-center shrink-0"
+            className="relative w-20 min-[420px]:w-28 sm:w-64 md:w-80 aspect-[594/860] flex items-center justify-center shrink-0 transform-gpu"
+            style={{ willChange: "transform, opacity" }}
           >
             <div className="absolute inset-0 rounded-full bg-white/5 blur-3xl pointer-events-none" />
             <Image

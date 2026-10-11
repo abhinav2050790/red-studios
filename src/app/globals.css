@@ -113,6 +113,22 @@ button, a, input, textarea, select {
   -webkit-touch-callout: none;
 }
 
+/* 120Hz ProMotion & High-Refresh Screen Hardware Acceleration */
+.will-change-transform {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.transform-gpu {
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
 /* Prevent iOS Safari auto-zoom and eliminate expensive GPU backdrop-blur lag during scroll */
 @media screen and (max-width: 768px) {
   input, textarea, select {

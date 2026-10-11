@@ -333,13 +333,13 @@ export default function FluidHero({ isActive = true, onExplore }: FluidHeroProps
       (window.innerWidth <= 1024 && window.matchMedia("(pointer: coarse)").matches)
     );
 
-    // Exact fluid parameters dynamically tuned for mobile 60-120fps efficiency while preserving max PC fidelity
+    // Exact fluid parameters dynamically tuned for feather-light 120fps mobile screens
     const settings = {
-      simResolution: isMobileScreen ? 128 : 256,
-      dyeResolution: isMobileScreen ? 256 : 512,
+      simResolution: isMobileScreen ? 112 : 256,
+      dyeResolution: isMobileScreen ? 224 : 512,
       velocityDissipation: 0.962,
       dyeDissipation: isMobileScreen ? 0.988 : 0.992,
-      pressureIterations: isMobileScreen ? 8 : 20,
+      pressureIterations: isMobileScreen ? 6 : 20,
       curlStrength: 0.0,
       splatRadius: isMobileScreen ? 0.00018 : 0.00010,
       splatForce: 5900,
@@ -361,8 +361,8 @@ export default function FluidHero({ isActive = true, onExplore }: FluidHeroProps
       return;
     }
 
-    // Maintain 2.0 DPR on mobile and desktop so Retina & OLED screens render crystal-clear text and logos
-    const maxDpr = 2.0;
+    // DPR 1.5 on mobile saves ~44% GPU fill-rate for locked 120fps ProMotion performance; 2.0 on PC
+    const maxDpr = isMobileScreen ? 1.5 : 2.0;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
     renderer.autoClear = false;
 
@@ -734,7 +734,7 @@ export default function FluidHero({ isActive = true, onExplore }: FluidHeroProps
       const height = Math.max(1, Math.round(rect.height));
       planeAspect = width / height;
 
-      const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
+      const dpr = Math.min(window.devicePixelRatio || 1, isMobileScreen ? 1.5 : 2.0);
       renderer.setPixelRatio(dpr);
       renderer.setSize(width, height, false);
       maskMaterial.uniforms.uPlaneAspect.value = planeAspect;

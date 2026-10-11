@@ -24,10 +24,10 @@ export default function Home() {
     setCurrentSlide(clamped);
     currentSlideRef.current = clamped;
 
-    // Smooth transition lock duration (700ms)
+    // Snappy transition lock duration (520ms for buttery 120fps mobile screens)
     setTimeout(() => {
       isAnimatingRef.current = false;
-    }, 700);
+    }, 520);
   }, []);
 
   // Calibrated gesture controller for desktop wheels & mobile touch flick/swipes
@@ -93,15 +93,15 @@ export default function Home() {
       const isVertical = Math.abs(deltaY) > Math.abs(deltaX) * 1.15;
       if (!isVertical) return;
 
-      // Snappy mobile flick (high velocity, short stroke) or deliberate drag
-      const isFlick = velocityY > 0.35 && Math.abs(deltaY) > 20;
-      const isDeliberateSwipe = Math.abs(deltaY) > 40 && deltaTime < 900;
+      // Feather-light flick (tuned for 120fps ProMotion screens) or deliberate swipe
+      const isFlick = velocityY > 0.28 && Math.abs(deltaY) > 16;
+      const isDeliberateSwipe = Math.abs(deltaY) > 34 && deltaTime < 900;
 
       // On Slide 0 (Fluid Hero), user might have been swirling fluid for multiple seconds
       // Avoid accidental transitions during liquid interaction
       if (currentSlideRef.current === 0) {
-        const isIntroSwipe = deltaY > 35 && deltaTime < 550;
-        const isIntroFlick = velocityY > 0.36 && deltaY > 22;
+        const isIntroSwipe = deltaY > 30 && deltaTime < 550;
+        const isIntroFlick = velocityY > 0.30 && deltaY > 18;
         if (isIntroFlick || isIntroSwipe) {
           goToSlide(1);
         }
@@ -153,7 +153,7 @@ export default function Home() {
     };
   }, [goToSlide]);
 
-  const transition = { duration: 0.7, ease: [0.16, 1, 0.3, 1] as const };
+  const transition = { duration: 0.52, ease: [0.22, 1, 0.32, 1] as const };
 
   const slidesMeta = [
     { index: 0, label: "Red Studios Intro" },
